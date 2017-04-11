@@ -103,6 +103,7 @@ CachingTileProvider::CachingTileProvider(const ghoul::Dictionary& dictionary)
     _framesUntilRequestFlush = framesUntilRequestFlush;
 
     if (dictionary.hasKeyAndValue<double>(PreCacheLevel)) {
+        LINFO("Precaching: " << filePath);
         const int preCacheLevel = static_cast<int>(dictionary.value<double>(PreCacheLevel));
         for (int level = 0; level <= preCacheLevel; ++level) {
             for (int x = 0; x <= level * 2; ++x) {

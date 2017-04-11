@@ -382,7 +382,7 @@ int TileDataset::calculateTileLevelDifference(int minimumPixelSize) {
     sizeLevel0 = maxOverview->GetXSize();
     double diff = log2(minimumPixelSize) - log2(sizeLevel0);
 
-    if (diff >= 0) {
+    if (diff > 0) {
         LWARNINGC(
             _initData.gdalDatasetDesc, "Minimum Pixel Size: " <<
             minimumPixelSize << " bigger than first size level: " << sizeLevel0
