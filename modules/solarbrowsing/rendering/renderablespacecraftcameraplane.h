@@ -49,6 +49,7 @@ namespace openspace {
 struct BufferObject {
     unsigned char* data;
     std::string name;
+    unsigned int size;
 };
 
 // TODO(mnoven) : Move to separate class
@@ -63,7 +64,7 @@ public:
     }
 
     virtual void execute() final {
-        BufferObject b = {new unsigned char[_imageSize * _imageSize], _path};
+        BufferObject b = {new unsigned char[_imageSize * _imageSize], _path, _imageSize};
         SimpleJ2kCodec j2c(_verboseMode);
         j2c.DecodeIntoBuffer(b.name, b.data, _resolutionLevel);
         _bufferObject = std::make_shared<BufferObject>(b);
@@ -118,6 +119,7 @@ private:
     properties::BoolProperty _usePBO;
     properties::BoolProperty _verboseMode;
     properties::DoubleProperty _planeSize;
+    properties::BoolProperty _usePerformanceResolution;
 
     std::chrono::milliseconds _realTime;
     std::chrono::milliseconds _lastUpdateRealTime;
@@ -142,6 +144,7 @@ private:
 
     bool _updatingCurrentActiveChannel = false;
     bool _updatingCurrentLevelOfResolution = false;
+    bool _updatingPerformanceResolution = false;
 
     std::unique_ptr<std::future<void>> _future;
     bool _initializePBO;
@@ -155,10 +158,14 @@ private:
     GLuint _vertexPositionBuffer;
 
     unsigned int _imageSize;
+    unsigned int _imageSizeToRender;
+    unsigned int _imageSizeLast;
     unsigned int _fullResolution;
     double _move = 0.0;
     double _deltaTimeLast = 0.0;
     double _realTimeDiff;
+
+    bool _resolutionIsDirty = false;
 
     std::vector<std::unique_ptr<TransferFunction>> _transferFunctions;
     std::unordered_map<std::string, std::shared_ptr<TransferFunction>> _tfMap;

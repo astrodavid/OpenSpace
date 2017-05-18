@@ -58,7 +58,7 @@ RenderableSpacecraftCameraPlane::RenderableSpacecraftCameraPlane(const ghoul::Di
     : Renderable(dictionary)
     , _asyncUploadPBO("asyncUploadPBO", "Upload to PBO Async", true)
     , _activeInstruments("activeInstrument", "Active Instrument", properties::OptionProperty::DisplayType::Radio)
-    , _bufferSize("bufferSize", "Buffer Size", 10, 1, 100)
+    , _bufferSize("bufferSize", "Buffer Size", 15, 1, 100)
     , _displayTimers("displayTimers", "Display Timers", false)
     , _lazyBuffering("lazyBuffering", "Lazy Buffering", true)
     , _minRealTimeUpdateInterval("minRealTimeUpdateInterval", "Min Update Interval", 80, 0, 300)
@@ -69,6 +69,7 @@ RenderableSpacecraftCameraPlane::RenderableSpacecraftCameraPlane(const ghoul::Di
     , _usePBO("usePBO", "Use PBO", true)
     , _planeSize("planeSize", "Plane Size", 50.0, 0.0, 1.0)
     , _concurrentJobManager(std::make_shared<globebrowsing::ThreadPool>(1))
+    , _usePerformanceResolution("usePerformanceResolution", "Performance Resolution", false)
     , _verboseMode("verboseMode", "Verbose Mode", false)
 {
     std::string target;
@@ -153,9 +154,12 @@ RenderableSpacecraftCameraPlane::RenderableSpacecraftCameraPlane(const ghoul::Di
     //TODO(mnoven): Can't assume 1 plane
     Time::ref().setTime(_startTimeSequence - 10);
 
-    _pboSize = (_fullResolution * _fullResolution * sizeof(IMG_PRECISION))
-               / (pow(4, _resolutionLevel));
     _imageSize = _fullResolution / (pow(2, _resolutionLevel));
+    // For per resolution
+    _imageSizeLast = _imageSize;
+    _pboSize = _imageSize * _imageSize;
+    // _pboSize = (_fullResolution * _fullResolution * sizeof(IMG_PRECISION))
+    //            / (pow(4, _resolutionLevel));
 
     // Generate PBO
     glGenBuffers(2, pboHandles);
@@ -216,26 +220,37 @@ RenderableSpacecraftCameraPlane::RenderableSpacecraftCameraPlane(const ghoul::Di
         _updatingCurrentActiveChannel = false;
     });
 
-    _resolutionLevel.onChange([this]() {
-        if (_verboseMode) {
-            LDEBUG("Updating level of resolution " << _resolutionLevel);
+    _usePerformanceResolution.onChange([this]() {
+        if (_usePerformanceResolution == false) {
+            _resolutionLevel = 3;
         }
-        _updatingCurrentLevelOfResolution = true;
-        _pboSize = (_fullResolution * _fullResolution * sizeof(IMG_PRECISION)) / (pow(4, _resolutionLevel));
-        _imageSize = _fullResolution / (pow(2, _resolutionLevel));
-        updateTextureGPU(/*asyncUpload=*/false, /*resChanged=*/true);
-        _concurrentJobManager.reset();
-        while (_concurrentJobManager.numFinishedJobs() > 0) {
-            _concurrentJobManager.popFinishedJob();
-        }
+    });
 
-        if (_useBuffering) {
-            //_initializePBO = true;
-            fillBuffer(Time::ref().deltaTime());
-        } else {
-            uploadImageDataToPBO(_currentActiveImage);
+    _resolutionLevel.onChange([this]() {
+        if (!_usePerformanceResolution) {
+            if (_verboseMode) {
+                LDEBUG("Updating level of resolution " << _resolutionLevel);
+            }
+
+            _updatingCurrentLevelOfResolution = true;
+            _pboSize = (_fullResolution * _fullResolution * sizeof(IMG_PRECISION)) / (pow(4, _resolutionLevel));
+            _imageSize = _fullResolution / (pow(2, _resolutionLevel));
+            _imageSizeToRender = _imageSize;
+            updateTextureGPU(/*asyncUpload=*/false, /*resChanged=*/true);
+            _concurrentJobManager.reset();
+            while (_concurrentJobManager.numFinishedJobs() > 0) {
+                _concurrentJobManager.popFinishedJob();
+            }
+
+            assert(_concurrentJobManager.numFinishedJobs() == 0);
+            if (_useBuffering) {
+                fillBuffer(Time::ref().deltaTime());
+                //_initializePBO = true;
+            } else {
+                uploadImageDataToPBO(_currentActiveImage);
+            }
+            _updatingCurrentLevelOfResolution = false;
         }
-        _updatingCurrentLevelOfResolution = false;
     });
 
     _moveFactor.onChange([this]() {
@@ -270,6 +285,7 @@ RenderableSpacecraftCameraPlane::RenderableSpacecraftCameraPlane(const ghoul::Di
     addProperty(_usePBO);
     addProperty(_target);
     addProperty(_moveFactor);
+    addProperty(_usePerformanceResolution);
     addProperty(_verboseMode);
 }
 
@@ -294,6 +310,7 @@ void RenderableSpacecraftCameraPlane::fillBuffer(const double& dt) {
 
         const std::string& currentFilename
               = _imageMetadataMap[_currentActiveInstrument][nextImageIndex].filename;
+
         auto job = std::make_shared<DecodeJob>(_imageSize, currentFilename,
                                                _resolutionLevel, _verboseMode);
         _concurrentJobManager.enqueueJob(job);
@@ -310,6 +327,8 @@ void RenderableSpacecraftCameraPlane::fillBuffer(const double& dt) {
             }
         }
     }
+
+    LWARNING("finished filling buffer");
     _initializePBO = true;
 }
 
@@ -459,15 +478,23 @@ bool RenderableSpacecraftCameraPlane::deinitialize() {
     return true;
 }
 
+
+// TODO(mnoven): This is such a mess.. need to finish features before cleaning.
 void RenderableSpacecraftCameraPlane::uploadImageDataToPBO(const int& image) {
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pboHandles[0]); // 1 - _currentPBO
-    // Orphan data and multithread
-    glBufferData(GL_PIXEL_UNPACK_BUFFER, _pboSize, NULL, GL_STREAM_DRAW);
-    // Map buffer to client memory
-    //_pboBufferData = static_cast<float*>(glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY));
-    _pboBufferData = static_cast<IMG_PRECISION*>(
-          glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, NULL, _pboSize,
-                           GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT));
+
+    // If no buffering map PBO directly, if buffering we need to know image size of the
+    // current popped image
+    if (!_usePerformanceResolution) {
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pboHandles[0]); // 1 - _currentPBO
+        // Orphan data and multithread
+        glBufferData(GL_PIXEL_UNPACK_BUFFER, _pboSize, NULL, GL_STREAM_DRAW);
+        // Map buffer to client memory
+        //_pboBufferData = static_cast<float*>(glMapBuffer(GL_PIXEL_UNPACK_BUFFER,
+        //GL_WRITE_ONLY));
+        _pboBufferData = static_cast<IMG_PRECISION*>(
+              glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, NULL, _pboSize,
+                               GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT));
+    }
 
     if (!_asyncUploadPBO) {
         std::string& currentFilename = _imageMetadataMap[_currentActiveInstrument][image].filename;
@@ -482,16 +509,66 @@ void RenderableSpacecraftCameraPlane::uploadImageDataToPBO(const int& image) {
                   }));
             _pboIsDirty = true;
         } else {
-            if (_concurrentJobManager.numFinishedJobs() > 0) {
+            const int& numFinishedJobs = _concurrentJobManager.numFinishedJobs();
+            if (numFinishedJobs > 0) {
+
                 std::shared_ptr<BufferObject> b = _concurrentJobManager.popFinishedJob()->product();
                 unsigned char* data = b->data;
+
+                // IMPORTANT(mnoven) : Concurrent job manager doesn't seem to clear the buffer properly.
+                // Old jobs can still be popped
+                _imageSizeToRender = b->size;
+
+                if (_usePerformanceResolution) {
+                    if (_imageSizeToRender != _imageSizeLast) {
+                        _resolutionIsDirty = true;
+                    }
+                    _imageSizeLast = _imageSizeToRender;
+
+                    _pboSize = _imageSizeToRender * _imageSizeToRender;
+
+                    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pboHandles[0]); // 1 - _currentPBO
+                    // Orphan data and multithread
+                    glBufferData(GL_PIXEL_UNPACK_BUFFER, _pboSize, NULL, GL_STREAM_DRAW);
+                    // Map buffer to client memory
+                    //_pboBufferData = static_cast<float*>(glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY));
+                    _pboBufferData = static_cast<IMG_PRECISION*>(
+                          glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, NULL, _pboSize,
+                                           GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT));
+
+                    const double factor = static_cast<double>(numFinishedJobs);
+                    const double fullBufferSize = static_cast<double>(_bufferSize);
+                    // ADD job
+                    // Lower resolution if few jobs
+                    if (numFinishedJobs == 1) {
+                        _resolutionLevel = 5;
+                    } else if (factor < fullBufferSize / 6.0){
+                        _resolutionLevel = 4;
+                    } else if (factor < fullBufferSize / 3.0) {
+                        _resolutionLevel = 3;
+                    } else if (factor < fullBufferSize / 1.5) {
+                        _resolutionLevel = 2;
+                    } else if (factor < fullBufferSize / 1.15) {
+                        _resolutionLevel = 1;
+                    } else {
+                        _resolutionLevel = 0;
+                    }
+
+                    _imageSize = _fullResolution / (pow(2, _resolutionLevel));
+
+                    // Release the mapped buffer
+                    glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+                    // Set back to normal texture data source
+                    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+
+                }
 
                 if (_verboseMode) {
                     LDEBUG("Popped image" << b->name);
                 }
 
                 auto t1 = Clock::now();
-                std::memcpy(_pboBufferData, data, _imageSize * _imageSize * sizeof(unsigned char));
+                std::memcpy(_pboBufferData, data, _imageSizeToRender * _imageSizeToRender * sizeof(unsigned char));
                 auto t2 = Clock::now();
 
                 if (_displayTimers) {
@@ -528,15 +605,16 @@ void RenderableSpacecraftCameraPlane::uploadImageDataToPBO(const int& image) {
                 }
                 _pboBufferData = nullptr;
             }
-
         }
 
     }
 
     // Release the mapped buffer
-    glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
-    // Set back to normal texture data source
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    if (!_usePerformanceResolution) {
+        glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+        // Set back to normal texture data source
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    }
 }
 
 void RenderableSpacecraftCameraPlane::updateTextureGPU(bool asyncUpload, bool resChanged) {
@@ -550,10 +628,17 @@ void RenderableSpacecraftCameraPlane::updateTextureGPU(bool asyncUpload, bool re
             glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pboHandles[0]);
             _texture->bind();
             // Send async to GPU by coping from PBO to texture objects
-            glTexSubImage2D(_texture->type(), 0, 0, 0, _imageSize, _imageSize,
-                            GLint(_texture->format()), _texture->dataType(), nullptr);
-            glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+            if (_usePerformanceResolution && _resolutionIsDirty) {
+                glTexImage2D(_texture->type(), 0, _texture->internalFormat(), _imageSizeToRender,
+                             _imageSizeToRender, 0, GLint(_texture->format()), _texture->dataType(),
+                             nullptr);
+                _resolutionIsDirty = false;
+            } else {
+                glTexSubImage2D(_texture->type(), 0, 0, 0, _imageSizeToRender, _imageSizeToRender,
+                           GLint(_texture->format()), _texture->dataType(), nullptr);
+            }
 
+            glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
             _pboIsDirty = false;
         }
     } else {
@@ -664,7 +749,7 @@ void RenderableSpacecraftCameraPlane::update(const UpdateData& data) {
     // Update texture
     // The bool blockers might probably not be needed now
     if (timeToUpdateTexture && !_updatingCurrentLevelOfResolution
-        && !_updatingCurrentActiveChannel) {
+        && !_updatingCurrentActiveChannel && !_updatingPerformanceResolution) {
         performImageTimestep(data.time);
         _lastUpdateRealTime = _realTime;
     }
