@@ -33,7 +33,8 @@ namespace openspace {
 
 class J2KGpu {
 public:
-    J2KGpu(float* imageBuffer, const int& imageSize, int level);
+    J2KGpu(/*float* imageBuffer, */const int& imageSize/*, int level*/);
+    void inversedwt(int level);
 
 private:
     enum extmode {
@@ -43,9 +44,11 @@ private:
 
     GLuint _lookupTexID;
     GLuint _reconFilterTexID;
+    std::unique_ptr<ghoul::opengl::ProgramObject> _inverseDwtRow;
+    std::unique_ptr<ghoul::opengl::ProgramObject> _inverseDwtCol;
 
+    bool inversedwtInternal(int level, int startx, int starty, int endx, int endy);
     bool createFilterTex();
-    void inversedwt(int level, int startx, int starty, int endx, int endy);
     void calLength(int startind, int endind, int level, int *llength, int *loffset);
     int calLevels(int startind, int endind);
     bool createInvLookupTex(extmode mode);

@@ -24,6 +24,7 @@
 
 #include <modules/solarbrowsing/util/j2kgpu.h>
 #include <math.h>
+#include <ghoul/filesystem/filesystem.h>
 
 // 1. Decode job (buffer) is only to read in file. => Buffer will be constantly full
 // 2. Send texture as usual to GPU. But with RAW data
@@ -40,21 +41,53 @@ namespace {
 
 namespace openspace {
 
-J2KGpu::J2KGpu(float* imageBuffer, const int& imageSize, int level) {
+J2KGpu::J2KGpu(const int& imageSize) {
     _imageSize = imageSize;
-
     //createImgTex();// Should already be done
     createFilterTex();
     createInvLookupTex(extmode::symper);
 
-    // for (int i = level - 1; i >= 0; i--) {
-    //   inversedwt(i, 0, 0, 0, 0);
-    // }
+    // RenderEngine& renderEngine = OsEng.renderEngine();
+    // _inverseDwtRow = renderEngine.buildRenderProgram("SpacecraftImagePlaneProgram",
+    //     "${MODULE_SOLARBROWSING}/shaders/spacecraftimageplane_vs.glsl",
+    //     "${MODULE_SOLARBROWSING}/shaders/spacecraftimageplane_fs.glsl"
+    // );
+
+    std::string invRowName = "InverseDwtRowProgram";
+    std::string invColName = "InverseDwtColProgram";
+
+    _inverseDwtRow = std::make_unique<ghoul::opengl::ProgramObject>(invRowName);
+    _inverseDwtCol = std::make_unique<ghoul::opengl::ProgramObject>(invColName);
+
+    _inverseDwtRow->attachObject(std::make_unique<ghoul::opengl::ShaderObject>(
+        ghoul::opengl::ShaderObject::ShaderType::ShaderTypeCompute,
+        absPath("${MODULE_SOLARBROWSING}/shaders/inversedwtrow_cs.glsl"),
+        invRowName + " Compute",
+        ghoul::Dictionary()
+    ));
+
+    _inverseDwtRow->linkProgramObject();
+    _inverseDwtRow->compileShaderObjects();
+
+    _inverseDwtCol->attachObject(std::make_unique<ghoul::opengl::ShaderObject>(
+        ghoul::opengl::ShaderObject::ShaderType::ShaderTypeFragment,
+        absPath("${MODULE_SOLARBROWSING}/shaders/inversedwtcol_cs.glsl"),
+        invColName + " Compute",
+        ghoul::Dictionary()
+    ));
+    _inverseDwtCol->linkProgramObject();
+    _inverseDwtCol->compileShaderObjects();
+}
+
+void J2KGpu::inversedwt(/*float* imageBuffer, */int level) {
+  for (int i = level - 1; i >= 0; i--) {
+      inversedwtInternal(i, 0, 0, 0, 0);
+  }
 }
 
 bool J2KGpu::createFilterTex() {
   glGenTextures(1, &_reconFilterTexID);
-  glBindTexture(GL_TEXTURE_RECTANGLE_NV, _reconFilterTexID);
+  //glBindTexture(GL_TEXTURE_RECTANGLE_NV, _reconFilterTexID);
   glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -73,7 +106,7 @@ bool J2KGpu::createInvLookupTex(extmode mode) {
 
   glGenTextures(1, &_lookupTexID);
   // Bind texture for IDWT
-  glBindTexture(GL_TEXTURE_RECTANGLE_NV, _lookupTexID);
+  //glBindTexture(GL_TEXTURE_RECTANGLE_NV, _lookupTexID);
   glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -83,9 +116,14 @@ bool J2KGpu::createInvLookupTex(extmode mode) {
   delete[] tex1;
 }
 
-// bool J2KGpu::inversedwt(int level, int startx, int starty, int endx, int endy) {
-
-// }
+bool J2KGpu::inversedwtInternal(int level, int startx, int starty, int endx, int endy) {
+  _inverseDwtRow->activate();
+  _inverseDwtRow->setUniform("level", level);
+  // Bind textures... _inverseDwtRow->deactivate();
+  _inverseDwtCol->activate();
+  // Bind textures...
+  _inverseDwtCol->deactivate();
+}
 
 int J2KGpu::ext(int index, int datalen, extmode mode) {
   int id = index;
