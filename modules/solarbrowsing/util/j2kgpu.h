@@ -26,6 +26,7 @@
 #define __OPENSPACE_MODULE_SOLARBROWSING___J2KGPU___H__
 
 #include <openspace/util/openspacemodule.h>
+#include <ghoul/opengl/programobject.h>
 #include <string>
 
 namespace openspace {
@@ -39,6 +40,12 @@ private:
       per,
       symper
     };
+
+    GLuint _lookupTexID;
+    GLuint _reconFilterTexID;
+
+    bool createFilterTex();
+    void inversedwt(int level, int startx, int starty, int endx, int endy);
     void calLength(int startind, int endind, int level, int *llength, int *loffset);
     int calLevels(int startind, int endind);
     bool createInvLookupTex(extmode mode);

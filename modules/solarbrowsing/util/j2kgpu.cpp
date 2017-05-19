@@ -31,11 +31,35 @@
 // 4. Swithc on other compute program, Dispatch Compute Shader Col
 // 4. Read from texture as usual in fragment shader
 
+namespace {
+  const float recon_filter[18] = {
+    0,  0.033728f, -0.057544f, -0.533728f, 1.115087f,-0.533728f, -0.057544f,  0.033728f, 0, 
+    0.053498f, -0.091272f, -0.156446f,  0.591272f, 1.205898f, 0.591272f, -0.156446f, -0.091272f, 0.053498f
+  };
+}
+
 namespace openspace {
 
 J2KGpu::J2KGpu(float* imageBuffer, const int& imageSize, int level) {
     _imageSize = imageSize;
+
+    //createImgTex();// Should already be done
+    createFilterTex();
     createInvLookupTex(extmode::symper);
+
+    // for (int i = level - 1; i >= 0; i--) {
+    //   inversedwt(i, 0, 0, 0, 0);
+    // }
+}
+
+bool J2KGpu::createFilterTex() {
+  glGenTextures(1, &_reconFilterTexID);
+  glBindTexture(GL_TEXTURE_RECTANGLE_NV, _reconFilterTexID);
+  glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, GL_FLOAT_R32_NV, 18, 1, 0, GL_RED, GL_FLOAT, recon_filter);
 }
 
 bool J2KGpu::createInvLookupTex(extmode mode) {
@@ -46,7 +70,22 @@ bool J2KGpu::createInvLookupTex(extmode mode) {
   createIDATexture(mode, &tex1, _imageSize, _imageSize, texwidth, texheight);
   _texwidth = texwidth;
   _texheight = texheight;
+
+  glGenTextures(1, &_lookupTexID);
+  // Bind texture for IDWT
+  glBindTexture(GL_TEXTURE_RECTANGLE_NV, _lookupTexID);
+  glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D   (GL_TEXTURE_RECTANGLE_NV, 0, GL_FLOAT_RGBA32_NV, texwidth, texheight, 0, GL_RGBA, GL_FLOAT, tex1);
+  // Given OpenGL the texture memory, safe to delete
+  delete[] tex1;
 }
+
+// bool J2KGpu::inversedwt(int level, int startx, int starty, int endx, int endy) {
+
+// }
 
 int J2KGpu::ext(int index, int datalen, extmode mode) {
   int id = index;
@@ -107,13 +146,11 @@ bool J2KGpu::createIDATexture(extmode mode, float** itex1, const int& width, con
   float   (*tex1)[4] = new float[texwidth * texheight][4];
 
   // create the indirect addressing texture
-  for (i = 0; i < xlevels; i++)
-  {
+  for (i = 0; i < xlevels; i++) {
     calLength(startx, endx, i, &levellength, &loffset);
     calLength(startx, endx, i + 1, &halflength, &loffset);
 
-    for (j = 0; j < levellength; j++)
-    {
+    for (j = 0; j < levellength; j++) {
       int   eo = j % 2;
       float neighbours[9];
 
@@ -133,11 +170,9 @@ bool J2KGpu::createIDATexture(extmode mode, float** itex1, const int& width, con
       tex1[i * texwidth + j][0] = neighbours[0];
 
       // Compute 9 neighbors' addresses only for the last element (boundary extension)
-      if (j == levellength - 1)
-      {
+      if (j == levellength - 1) {
         //  these 5 neighbours share same parity (even/oddness) 
-        for (k = -4; k <= 4; k += 2)
-        {
+        for (k = -4; k <= 4; k += 2) {
           if (loffset == 1)
             neighbours[k + 4] = 0.5 + halflength * (1.0 - eo) + (ext(j + k, levellength, mode) - 1.0 * eo) / 2.0;
           else
@@ -147,8 +182,7 @@ bool J2KGpu::createIDATexture(extmode mode, float** itex1, const int& width, con
         eo = 1 - eo;
 
         //  these 4 neighbours share same parity (even/oddness) 
-        for (k = -3; k <= 3; k += 2)
-        {
+        for (k = -3; k <= 3; k += 2) {
           if (loffset == 1)
             neighbours[k + 4] = 0.5 + halflength * (1.0 - eo) + (ext(j + k, levellength, mode) - 1.0 * eo) / 2.0;
           else
@@ -162,13 +196,11 @@ bool J2KGpu::createIDATexture(extmode mode, float** itex1, const int& width, con
   }
 
 
-  for (i = 0; i < ylevels; i++)
-  {
+  for (i = 0; i < ylevels; i++) {
     calLength(starty, endy, i, &levellength, &loffset);
     calLength(starty, endy, i + 1, &halflength, &loffset);
 
-    for (j = 0; j < levellength; j++)
-    {
+    for (j = 0; j < levellength; j++) {
       int   eo = j % 2;
       float neighbours[9];
 
