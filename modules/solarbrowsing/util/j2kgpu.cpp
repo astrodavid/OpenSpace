@@ -76,27 +76,27 @@ bool J2KGpu::inversedwtInternal(int level, int startx, int starty, int endx, int
   _inverseDwtRowProgram->setUniform("level", level);
 
   // Bind compressed texture
-  // compressedTexture->bind();
-  // ghoul::opengl::TextureUnit imageUnit;
-  // imageUnit.activate();
-  // _inverseDwtRowProgram->setUniform("compressedImageryTexture", imageUnit);
+  compressedTexture->bind();
+  ghoul::opengl::TextureUnit imageUnit;
+  imageUnit.activate();
+  _inverseDwtRowProgram->setUniform("compressedImageryTexture", imageUnit);
 
   // Bind inverse lookup texture
-  // ghoul::opengl::TextureUnit lookupUnit;
-  // lookupUnit.activate();
-  // glBindTexture(GL_TEXTURE_RECTANGLE_NV, _lookupTexID);
-  // _inverseDwtRowProgram->setUniform("lut", lookupUnit);
+  ghoul::opengl::TextureUnit lookupUnit;
+  lookupUnit.activate();
+  glBindTexture(GL_TEXTURE_RECTANGLE_NV, _lookupTexID);
+  _inverseDwtRowProgram->setUniform("lut", lookupUnit);
 
   // // Bind filter texture
-  // ghoul::opengl::TextureUnit filterUnit;
-  // glBindTexture(GL_TEXTURE_RECTANGLE_NV, _reconFilterTexID);
-  // _inverseDwtRowProgram->setUniform("filter", filterUnit);
+  ghoul::opengl::TextureUnit filterUnit;
+  glBindTexture(GL_TEXTURE_RECTANGLE_NV, _reconFilterTexID);
+  _inverseDwtRowProgram->setUniform("filter", filterUnit);
 
   // Disable Scissor test if enabled..
-  // const bool isScissorTestEnabled = glIsEnabled(GL_SCISSOR_TEST);
-  // if (isScissorTestEnabled) {
-  //   glDisable(GL_SCISSOR_TEST);
-  // }
+  const bool isScissorTestEnabled = glIsEnabled(GL_SCISSOR_TEST);
+  if (isScissorTestEnabled) {
+    glDisable(GL_SCISSOR_TEST);
+  }
   // Get current viewport size
   GLint viewPortSize[4];
   glGetIntegerv(GL_VIEWPORT, viewPortSize);
@@ -108,15 +108,14 @@ bool J2KGpu::inversedwtInternal(int level, int startx, int starty, int endx, int
   // Set back viewport size
   glViewport(viewPortSize[0], viewPortSize[1], viewPortSize[2], viewPortSize[3]);
   // Activate scissor test
-  // if (isScissorTestEnabled) {
-  //   glEnable(GL_SCISSOR_TEST);
-  // }
+  if (isScissorTestEnabled) {
+    glEnable(GL_SCISSOR_TEST);
+  }
 
   _inverseDwtRowProgram->deactivate();
   _idwtRowFbo->deactivate();
 
   // Tex1 now holds
-
   //_inverseDwtCol->activate();
   // Bind textures...
   //_inverseDwtCol->deactivate();
