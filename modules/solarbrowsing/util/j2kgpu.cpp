@@ -58,58 +58,59 @@ J2KGpu::J2KGpu(const int imageSize) {
 
 void J2KGpu::inversedwt(/*float* imageBuffer, */int level, ghoul::opengl::Texture* compressedTexture) {
   for (int i = level - 1; i >= 0; i--) {
-      inversedwtInternal(i, 0, 0, 0, 0, compressedTexture);
+    inversedwtInternal(i, 0, 0, 0, 0, compressedTexture);
   }
 }
 
 bool J2KGpu::inversedwtInternal(int level, int startx, int starty, int endx, int endy, ghoul::opengl::Texture* compressedTexture) {
   // Activate Fbo Row
   _idwtRowFbo->activate();
+  GLuint status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+  if (status != GL_FRAMEBUFFER_COMPLETE) {
+    std::cerr << "Framebuffer error " << status;
+  }
+
   // Activate Row shader
   _inverseDwtRowProgram->activate();
   // Set level uniform
   _inverseDwtRowProgram->setUniform("level", level);
 
   // Bind compressed texture
-  compressedTexture->bind();
-  ghoul::opengl::TextureUnit imageUnit;
-  imageUnit.activate();
-  _inverseDwtRowProgram->setUniform("compressedImageryTexture", imageUnit);
+  // compressedTexture->bind();
+  // ghoul::opengl::TextureUnit imageUnit;
+  // imageUnit.activate();
+  // _inverseDwtRowProgram->setUniform("compressedImageryTexture", imageUnit);
 
   // Bind inverse lookup texture
-  ghoul::opengl::TextureUnit lookupUnit;
-  lookupUnit.activate();
-  glBindTexture(GL_TEXTURE_RECTANGLE_NV, _lookupTexID);
-  _inverseDwtRowProgram->setUniform("lut", lookupUnit);
+  // ghoul::opengl::TextureUnit lookupUnit;
+  // lookupUnit.activate();
+  // glBindTexture(GL_TEXTURE_RECTANGLE_NV, _lookupTexID);
+  // _inverseDwtRowProgram->setUniform("lut", lookupUnit);
 
-  // Bind filter texture
-  ghoul::opengl::TextureUnit filterUnit;
-  glBindTexture(GL_TEXTURE_RECTANGLE_NV, _reconFilterTexID);
-  _inverseDwtRowProgram->setUniform("filter", filterUnit);
+  // // Bind filter texture
+  // ghoul::opengl::TextureUnit filterUnit;
+  // glBindTexture(GL_TEXTURE_RECTANGLE_NV, _reconFilterTexID);
+  // _inverseDwtRowProgram->setUniform("filter", filterUnit);
 
   // Disable Scissor test if enabled..
-  const bool isScissorTestEnabled = glIsEnabled(GL_SCISSOR_TEST);
-  if (isScissorTestEnabled) {
-    glDisable(GL_SCISSOR_TEST);
-  }
+  // const bool isScissorTestEnabled = glIsEnabled(GL_SCISSOR_TEST);
+  // if (isScissorTestEnabled) {
+  //   glDisable(GL_SCISSOR_TEST);
+  // }
   // Get current viewport size
   GLint viewPortSize[4];
   glGetIntegerv(GL_VIEWPORT, viewPortSize);
   glViewport(0, 0, 4096, 4096);
 
-
-
-  //glBindVertexArray(_quad);
-  //glDrawArrays(GL_TRIANGLES, 0, 6);
-
+  glBindVertexArray(_fullScreenQuad);
+  glDrawArrays(GL_TRIANGLES, 0, 6);
 
   // Set back viewport size
   glViewport(viewPortSize[0], viewPortSize[1], viewPortSize[2], viewPortSize[3]);
-
-  // Activate again
-  if (isScissorTestEnabled) {
-    glEnable(GL_SCISSOR_TEST);
-  }
+  // Activate scissor test
+  // if (isScissorTestEnabled) {
+  //   glEnable(GL_SCISSOR_TEST);
+  // }
 
   _inverseDwtRowProgram->deactivate();
   _idwtRowFbo->deactivate();
@@ -122,6 +123,8 @@ bool J2KGpu::inversedwtInternal(int level, int startx, int starty, int endx, int
 }
 
 void J2KGpu::createFullScreenQuad() {
+  glGenVertexArrays(1, &_fullScreenQuad); // generate array
+  glGenBuffers(1, &_vertexPositionBuffer);
 
   const GLfloat size = 1.f;
   const GLfloat vertex_data[] = {
@@ -146,31 +149,42 @@ void J2KGpu::createFullScreenQuad() {
 }
 
 void J2KGpu::createFbos() {
-  // Row FBO
-  _idwtRowFbo = std::make_unique<ghoul::opengl::FramebufferObject>();
   _fboTexRow  =   std::make_unique<ghoul::opengl::Texture>(
                     nullptr,
                     glm::size3_t(_imageSize, _imageSize, 1),
-                    ghoul::opengl::Texture::Red,
-                    GL_R32F,
+                    ghoul::opengl::Texture::RGBA,
+                    GL_RGBA32F,
                     GL_FLOAT,
                     ghoul::opengl::Texture::FilterMode::Nearest,
                     ghoul::opengl::Texture::WrappingMode::ClampToEdge
                 );
+  _fboTexRow->bind();
+  _fboTexRow->uploadTexture();
+ // glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA32F, _imageSize, _imageSize, 0, GL_RGBA, GL_FLOAT, nullptr);
+
+  _idwtRowFbo = std::make_unique<ghoul::opengl::FramebufferObject>();
+  _idwtRowFbo->activate();
   _idwtRowFbo->attachTexture(_fboTexRow.get());
+  _idwtRowFbo->deactivate();
 
   // Col FBO
-  _idwtColFbo = std::make_unique<ghoul::opengl::FramebufferObject>();
   _fboTexCol = std::make_unique<ghoul::opengl::Texture>(
                     nullptr,
                     glm::size3_t(_imageSize, _imageSize, 1),
-                    ghoul::opengl::Texture::Red,
-                    GL_R32F,
+                    ghoul::opengl::Texture::RGBA,
+                    GL_RGBA32F,
                     GL_FLOAT,
                     ghoul::opengl::Texture::FilterMode::Nearest,
                     ghoul::opengl::Texture::WrappingMode::ClampToEdge
                 );
+  _fboTexCol->bind();
+  _fboTexCol->uploadTexture();
+  //glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA32F, _imageSize, _imageSize, 0, GL_RGBA, GL_FLOAT, nullptr);
+
+  _idwtColFbo = std::make_unique<ghoul::opengl::FramebufferObject>();
+  _idwtColFbo->activate();
   _idwtColFbo->attachTexture(_fboTexCol.get());
+  _idwtColFbo->deactivate();
 }
 
 void J2KGpu::createShaders() {
@@ -219,12 +233,14 @@ void J2KGpu::createShaders() {
 
 bool J2KGpu::createFilterTex() {
   glGenTextures(1, &_reconFilterTexID);
-  //glBindTexture(GL_TEXTURE_RECTANGLE_NV, _reconFilterTexID);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 18, 1, 0, GL_RED, GL_FLOAT, recon_filter);
+  glBindTexture(GL_TEXTURE_RECTANGLE, _reconFilterTexID);
+  glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_R32F, 18, 1, 0, GL_RED, GL_FLOAT, recon_filter);
+
+  //glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_R32F, _imageSize, _imageSize, 0, GL_RED, GL_FLOAT, tempdata);
 }
 
 bool J2KGpu::createInvLookupTex(extmode mode) {
@@ -238,12 +254,12 @@ bool J2KGpu::createInvLookupTex(extmode mode) {
 
   glGenTextures(1, &_lookupTexID);
   // Bind texture for IDWT
-  //glBindTexture(GL_TEXTURE_RECTANGLE_NV, _lookupTexID);
-  glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexImage2D   (GL_TEXTURE_RECTANGLE_NV, 0, GL_FLOAT_RGBA32_NV, texwidth, texheight, 0, GL_RGBA, GL_FLOAT, tex1);
+  glBindTexture(GL_TEXTURE_RECTANGLE, _lookupTexID);
+  glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D   (GL_TEXTURE_RECTANGLE, 0, GL_RGBA32F, texwidth, texheight, 0, GL_RGBA, GL_FLOAT, tex1);
   // Given OpenGL the texture memory, safe to delete
   delete[] tex1;
 }

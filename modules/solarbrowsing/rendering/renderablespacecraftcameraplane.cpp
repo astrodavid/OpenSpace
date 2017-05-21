@@ -72,7 +72,8 @@ RenderableSpacecraftCameraPlane::RenderableSpacecraftCameraPlane(const ghoul::Di
     , _resolutionLevel("resolutionlevel", "Level of detail", 3, 0, 5)
     , _target("target", "Target", "Sun")
     , _useBuffering("useBuffering", "Use Buffering", true)
-    , _usePBO("usePBO", "Use PBO", true)
+    , _usePBO("usePBO", "Use PBO", false)
+    , _j2kgpu(4096)
     , _planeSize("planeSize", "Plane Size", 50.0, 0.0, 1.0)
     , _concurrentJobManager(std::make_shared<globebrowsing::ThreadPool>(1))
     , _verboseMode("verboseMode", "Verbose Mode", false)
@@ -81,6 +82,7 @@ RenderableSpacecraftCameraPlane::RenderableSpacecraftCameraPlane(const ghoul::Di
     if (dictionary.getValue("Target", target)) {
         _target = target;
     }
+    LDEBUG("constructor");
 
     glm::dvec2 magicPlaneOffset;
     if (dictionary.getValue("MagicOffsetFromCenter", magicPlaneOffset)) {
@@ -407,6 +409,8 @@ void RenderableSpacecraftCameraPlane::createFrustum() {
 }
 
 bool RenderableSpacecraftCameraPlane::initialize() {
+
+    LDEBUG("initialize");
     // Initialize plane buffer
     glGenVertexArrays(1, &_quad); // generate array
     glGenBuffers(1, &_vertexPositionBuffer);
@@ -554,40 +558,53 @@ void RenderableSpacecraftCameraPlane::uploadImageDataToPBO(const int& image) {
 }
 
 void RenderableSpacecraftCameraPlane::updateTextureGPU(bool asyncUpload, bool resChanged) {
-    if (_future) {
-        _future->wait();
-    }
-    _future = nullptr;
-    if (_usePBO && asyncUpload) {
-        if (_pboBufferData) {
-            // Bind PBO to texture data source
-            glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pboHandles[0]);
-            _texture->bind();
-            // Send async to GPU by coping from PBO to texture objects
-            glTexSubImage2D(_texture->type(), 0, 0, 0, _imageSize, _imageSize,
-                            GLint(_texture->format()), _texture->dataType(), nullptr);
-            glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    // if (_future) {
+    //     _future->wait();
+    // }
+    // _future = nullptr;
+    // if (_usePBO && asyncUpload) {
+    //     if (_pboBufferData) {
+    //         // Bind PBO to texture data source
+    //         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pboHandles[0]);
+    //         _texture->bind();
+    //         // Send async to GPU by coping from PBO to texture objects
+    //         glTexSubImage2D(_texture->type(), 0, 0, 0, _imageSize, _imageSize,
+    //                         GLint(_texture->format()), _texture->dataType(), nullptr);
+    //         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
-            _pboIsDirty = false;
-        }
-    } else {
-        const std::string& currentFilename
-              = _imageMetadataMap[_currentActiveInstrument][_currentActiveImage].filename;
-        unsigned char* data
-              = new unsigned char[_imageSize * _imageSize * sizeof(IMG_PRECISION)];
-        decode(data, currentFilename);
-        _texture->bind();
+    //         _pboIsDirty = false;
+    //     }
+    // } else {
+    //     const std::string& currentFilename
+    //           = _imageMetadataMap[_currentActiveInstrument][_currentActiveImage].filename;
+    //     unsigned char* data
+    //           = new unsigned char[_imageSize * _imageSize * sizeof(IMG_PRECISION)];
+    //     decode(data, currentFilename);
+    //     _texture->bind();
 
-        if (!resChanged) {
-            glTexSubImage2D(_texture->type(), 0, 0, 0, _imageSize, _imageSize,
-                            GLint(_texture->format()), _texture->dataType(), data);
-        } else {
-            glTexImage2D(_texture->type(), 0, _texture->internalFormat(), _imageSize,
-                         _imageSize, 0, GLint(_texture->format()), _texture->dataType(),
-                         data);
-        }
-        delete[] data;
+    //     if (!resChanged) {
+    //         glTexSubImage2D(_texture->type(), 0, 0, 0, _imageSize, _imageSize,
+    //                         GLint(_texture->format()), _texture->dataType(), data);
+    //     } else {
+    //         glTexImage2D(_texture->type(), 0, _texture->internalFormat(), _imageSize,
+    //                      _imageSize, 0, GLint(_texture->format()), _texture->dataType(),
+    //                      data);
+    //     }
+    //     delete[] data;
+    // }
+
+    // Get data
+    float* tempdata = new float[_imageSize * _imageSize];
+    for (int i = 0; i < _imageSize * _imageSize; ++i) {
+        tempdata[i] = 0.f;
     }
+
+    // Upload image data to texture
+    _texture->bind();
+    glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_R32F, _imageSize, _imageSize, 0, GL_RED, GL_FLOAT, tempdata);
+    _j2kgpu.inversedwt(1, _texture.get());
+
+    delete[] tempdata;
 }
 
 void RenderableSpacecraftCameraPlane::decode(unsigned char* buffer,
@@ -751,7 +768,8 @@ void RenderableSpacecraftCameraPlane::render(const RenderData& data) {
 
     ghoul::opengl::TextureUnit imageUnit;
     imageUnit.activate();
-    _texture->bind();
+    _j2kgpu._fboTexRow->bind();
+    //_texture->bind();
     _planeShader->setUniform("imageryTexture", imageUnit);
 
     //_tfMap[_currentActiveInstrument]->bind(); // Calls update internally
@@ -767,7 +785,6 @@ void RenderableSpacecraftCameraPlane::render(const RenderData& data) {
     _planeShader->setUniform("lut", tfUnit);
 
     glBindVertexArray(_quad);
-
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     _planeShader->deactivate();

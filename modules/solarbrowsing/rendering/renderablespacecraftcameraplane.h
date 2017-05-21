@@ -37,6 +37,7 @@
 #include <openspace/rendering/transferfunction.h>
 #include <memory>
 #include <modules/solarbrowsing/util/simplej2kcodec.h>
+#include <modules/solarbrowsing/util/j2kgpu.h>
 #include <unordered_set>
 
 #include <openspace/util/powerscaledsphere.h>
@@ -167,6 +168,8 @@ private:
     double _move = 0.0;
     double _deltaTimeLast = 0.0;
     double _realTimeDiff;
+
+    J2KGpu _j2kgpu;
 
     std::vector<std::unique_ptr<TransferFunction>> _transferFunctions;
     std::unordered_map<std::string, std::shared_ptr<TransferFunction>> _tfMap;
