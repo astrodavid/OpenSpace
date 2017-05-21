@@ -27,13 +27,14 @@
 
 #include <openspace/util/openspacemodule.h>
 #include <ghoul/opengl/programobject.h>
+#include <ghoul/opengl/framebufferobject.h>
 #include <string>
 
 namespace openspace {
 
 class J2KGpu {
 public:
-    J2KGpu(/*float* imageBuffer, */const int& imageSize/*, int level*/);
+    J2KGpu(/*float* imageBuffer, */const int imageSize/*, int level*/);
     void inversedwt(int level);
 
 private:
@@ -47,10 +48,18 @@ private:
     std::unique_ptr<ghoul::opengl::ProgramObject> _inverseDwtRow;
     std::unique_ptr<ghoul::opengl::ProgramObject> _inverseDwtCol;
 
+    std::unique_ptr<ghoul::opengl::Texture> _fboTex1;
+    std::unique_ptr<ghoul::opengl::Texture> _fboTex2;
+
+    std::unique_ptr<ghoul::opengl::FramebufferObject> _idwtRowFbo;
+    std::unique_ptr<ghoul::opengl::FramebufferObject> _idwtColFbo;
+
     bool inversedwtInternal(int level, int startx, int starty, int endx, int endy);
     bool createFilterTex();
     void calLength(int startind, int endind, int level, int *llength, int *loffset);
     int calLevels(int startind, int endind);
+    void createShaders();
+    void createFbos();
     bool createInvLookupTex(extmode mode);
     bool createIDATexture(extmode mode, float** tex1, const int& width, const int& height, int& texwidth, int& texheight);
     // boundary extension function
