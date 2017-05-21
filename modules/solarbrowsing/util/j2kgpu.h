@@ -56,12 +56,16 @@ private:
     std::unique_ptr<ghoul::opengl::FramebufferObject> _idwtRowFbo;
     std::unique_ptr<ghoul::opengl::FramebufferObject> _idwtColFbo;
 
+    GLuint _fullScreenQuad;
+    GLuint _vertexPositionBuffer;
+
     bool inversedwtInternal(int level, int startx, int starty, int endx, int endy);
     bool createFilterTex();
     void calLength(int startind, int endind, int level, int *llength, int *loffset);
     int calLevels(int startind, int endind);
     void createShaders();
     void createFbos();
+    void createFullScreenQuad();
     bool createInvLookupTex(extmode mode);
     bool createIDATexture(extmode mode, float** tex1, const int& width, const int& height, int& texwidth, int& texheight);
     // boundary extension function

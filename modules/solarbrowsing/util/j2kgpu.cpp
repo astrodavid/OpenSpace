@@ -51,8 +51,13 @@ J2KGpu::J2KGpu(const int imageSize) {
     //createComputeShaders();
     createShaders();
     createFbos();
+    createFullScreenQuad();
     createFilterTex();
-   // createInvLookupTex(extmode::symper);
+    createInvLookupTex(extmode::symper);
+
+    GLint maxview;
+    glGetIntegerv(GL_MAX_VIEWPORT_DIMS, &maxview);
+    std::cerr << "MAXMAXMAXMAXMAXMA   " << maxview << std::endl;
 }
 
 void J2KGpu::inversedwt(/*float* imageBuffer, */int level) {
@@ -63,6 +68,9 @@ void J2KGpu::inversedwt(/*float* imageBuffer, */int level) {
 
 bool J2KGpu::inversedwtInternal(int level, int startx, int starty, int endx, int endy) {
 
+  std::cerr << GL_MAX_VIEWPORT_DIMS << std::endl;
+  // Activate render to fbo1 texture
+  _idwtRowFbo->activate();
   // Activate row shader
   _inverseDwtRowProgram->activate();
   _inverseDwtRowProgram->setUniform("level", level);
@@ -82,9 +90,37 @@ bool J2KGpu::inversedwtInternal(int level, int startx, int starty, int endx, int
   glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
   _inverseDwtRowProgram->deactivate();
+  _idwtRowFbo->deactivate();
+
+  // Tex1 now holds 
+
   //_inverseDwtCol->activate();
   // Bind textures...
   //_inverseDwtCol->deactivate();
+}
+
+void J2KGpu::createFullScreenQuad() {
+
+  const GLfloat size = 1.f;
+  const GLfloat vertex_data[] = {
+      //      x      y     z     w     s     t
+      -size, -size, 0.f, 0.f, 0.f, 0.f,
+      size, size, 0.f, 0.f, 1.f, 1.f,
+      -size, size, 0.f, 0.f, 0.f, 1.f,
+      -size, -size, 0.f, 0.f, 0.f, 0.f,
+      size, -size, 0.f, 0.f, 1.f, 0.f,
+      size, size, 0.f, 0.f, 1.f, 1.f,
+  };
+
+  glBindVertexArray(_fullScreenQuad); // bind array
+  glBindBuffer(GL_ARRAY_BUFFER, _vertexPositionBuffer); // bind buffer
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data, GL_STATIC_DRAW);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 6,
+                        reinterpret_cast<void*>(0));
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 6,
+                        reinterpret_cast<void*>(sizeof(GLfloat) * 4));
 }
 
 void J2KGpu::createFbos() {
