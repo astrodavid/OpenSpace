@@ -54,45 +54,67 @@ J2KGpu::J2KGpu(const int imageSize) {
     createFullScreenQuad();
     createFilterTex();
     createInvLookupTex(extmode::symper);
-
-    GLint maxview;
-    glGetIntegerv(GL_MAX_VIEWPORT_DIMS, &maxview);
-    std::cerr << "MAXMAXMAXMAXMAXMA   " << maxview << std::endl;
 }
 
-void J2KGpu::inversedwt(/*float* imageBuffer, */int level) {
+void J2KGpu::inversedwt(/*float* imageBuffer, */int level, ghoul::opengl::Texture* compressedTexture) {
   for (int i = level - 1; i >= 0; i--) {
-      inversedwtInternal(i, 0, 0, 0, 0);
+      inversedwtInternal(i, 0, 0, 0, 0, compressedTexture);
   }
 }
 
-bool J2KGpu::inversedwtInternal(int level, int startx, int starty, int endx, int endy) {
-
-  std::cerr << GL_MAX_VIEWPORT_DIMS << std::endl;
-  // Activate render to fbo1 texture
+bool J2KGpu::inversedwtInternal(int level, int startx, int starty, int endx, int endy, ghoul::opengl::Texture* compressedTexture) {
+  // Activate Fbo Row
   _idwtRowFbo->activate();
-  // Activate row shader
+  // Activate Row shader
   _inverseDwtRowProgram->activate();
+  // Set level uniform
   _inverseDwtRowProgram->setUniform("level", level);
 
-  // Inverse lookup texture
+  // Bind compressed texture
+  compressedTexture->bind();
+  ghoul::opengl::TextureUnit imageUnit;
+  imageUnit.activate();
+  _inverseDwtRowProgram->setUniform("compressedImageryTexture", imageUnit);
+
+  // Bind inverse lookup texture
   ghoul::opengl::TextureUnit lookupUnit;
   lookupUnit.activate();
   glBindTexture(GL_TEXTURE_RECTANGLE_NV, _lookupTexID);
   _inverseDwtRowProgram->setUniform("lut", lookupUnit);
 
-  // Filter texture
+  // Bind filter texture
   ghoul::opengl::TextureUnit filterUnit;
   glBindTexture(GL_TEXTURE_RECTANGLE_NV, _reconFilterTexID);
   _inverseDwtRowProgram->setUniform("filter", filterUnit);
 
-//  glDispatchCompute(4096, 4096, 1);
-  glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+  // Disable Scissor test if enabled..
+  const bool isScissorTestEnabled = glIsEnabled(GL_SCISSOR_TEST);
+  if (isScissorTestEnabled) {
+    glDisable(GL_SCISSOR_TEST);
+  }
+  // Get current viewport size
+  GLint viewPortSize[4];
+  glGetIntegerv(GL_VIEWPORT, viewPortSize);
+  glViewport(0, 0, 4096, 4096);
+
+
+
+  //glBindVertexArray(_quad);
+  //glDrawArrays(GL_TRIANGLES, 0, 6);
+
+
+  // Set back viewport size
+  glViewport(viewPortSize[0], viewPortSize[1], viewPortSize[2], viewPortSize[3]);
+
+  // Activate again
+  if (isScissorTestEnabled) {
+    glEnable(GL_SCISSOR_TEST);
+  }
 
   _inverseDwtRowProgram->deactivate();
   _idwtRowFbo->deactivate();
 
-  // Tex1 now holds 
+  // Tex1 now holds
 
   //_inverseDwtCol->activate();
   // Bind textures...
@@ -126,7 +148,7 @@ void J2KGpu::createFullScreenQuad() {
 void J2KGpu::createFbos() {
   // Row FBO
   _idwtRowFbo = std::make_unique<ghoul::opengl::FramebufferObject>();
-  _fboTex1  =   std::make_unique<ghoul::opengl::Texture>(
+  _fboTexRow  =   std::make_unique<ghoul::opengl::Texture>(
                     nullptr,
                     glm::size3_t(_imageSize, _imageSize, 1),
                     ghoul::opengl::Texture::Red,
@@ -135,11 +157,11 @@ void J2KGpu::createFbos() {
                     ghoul::opengl::Texture::FilterMode::Nearest,
                     ghoul::opengl::Texture::WrappingMode::ClampToEdge
                 );
-  _idwtRowFbo->attachTexture(_fboTex1.get());
+  _idwtRowFbo->attachTexture(_fboTexRow.get());
 
   // Col FBO
   _idwtColFbo = std::make_unique<ghoul::opengl::FramebufferObject>();
-  _fboTex2 = std::make_unique<ghoul::opengl::Texture>(
+  _fboTexCol = std::make_unique<ghoul::opengl::Texture>(
                     nullptr,
                     glm::size3_t(_imageSize, _imageSize, 1),
                     ghoul::opengl::Texture::Red,
@@ -148,7 +170,7 @@ void J2KGpu::createFbos() {
                     ghoul::opengl::Texture::FilterMode::Nearest,
                     ghoul::opengl::Texture::WrappingMode::ClampToEdge
                 );
-  _idwtColFbo->attachTexture(_fboTex2.get());
+  _idwtColFbo->attachTexture(_fboTexCol.get());
 }
 
 void J2KGpu::createShaders() {

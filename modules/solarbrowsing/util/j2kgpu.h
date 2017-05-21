@@ -35,7 +35,9 @@ namespace openspace {
 class J2KGpu {
 public:
     J2KGpu(/*float* imageBuffer, */const int imageSize/*, int level*/);
-    void inversedwt(int level);
+    void inversedwt(int level, ghoul::opengl::Texture* compressedTexture);
+    std::unique_ptr<ghoul::opengl::Texture> _fboTexRow;
+    std::unique_ptr<ghoul::opengl::Texture> _fboTexCol;
 
 private:
     enum extmode {
@@ -50,16 +52,13 @@ private:
     std::unique_ptr<ghoul::opengl::ProgramObject> _inverseDwtRowProgram;
     std::unique_ptr<ghoul::opengl::ProgramObject> _inverseDwtColProgram;
 
-    std::unique_ptr<ghoul::opengl::Texture> _fboTex1;
-    std::unique_ptr<ghoul::opengl::Texture> _fboTex2;
-
     std::unique_ptr<ghoul::opengl::FramebufferObject> _idwtRowFbo;
     std::unique_ptr<ghoul::opengl::FramebufferObject> _idwtColFbo;
 
     GLuint _fullScreenQuad;
     GLuint _vertexPositionBuffer;
 
-    bool inversedwtInternal(int level, int startx, int starty, int endx, int endy);
+    bool inversedwtInternal(int level, int startx, int starty, int endx, int endy, ghoul::opengl::Texture* compressedTexture);
     bool createFilterTex();
     void calLength(int startind, int endind, int level, int *llength, int *loffset);
     int calLevels(int startind, int endind);
