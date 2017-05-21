@@ -22,55 +22,15 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         *
  ****************************************************************************************/
 
-#ifndef __OPENSPACE_MODULE_SOLARBROWSING___J2KGPU___H__
-#define __OPENSPACE_MODULE_SOLARBROWSING___J2KGPU___H__
+#include "fragment.glsl"
 
-#include <openspace/util/openspacemodule.h>
-#include <ghoul/opengl/programobject.h>
-#include <ghoul/opengl/framebufferobject.h>
-#include <string>
+uniform sampler2D imageryTextureCompressed;
 
-namespace openspace {
+Fragment getFragment() {
+    vec4 diffuse = vec4(0.0, 1.0, 1.0, 1.0);
 
-class J2KGpu {
-public:
-    J2KGpu(/*float* imageBuffer, */const int imageSize/*, int level*/);
-    void inversedwt(int level);
-
-private:
-    enum extmode {
-      per,
-      symper
-    };
-
-    GLuint _lookupTexID;
-    GLuint _reconFilterTexID;
-    //std::unique_ptr<ghoul::opengl::ProgramObject> _inverseDwtRow;
-    //std::unique_ptr<ghoul::opengl::ProgramObject> _inverseDwtCol;
-    std::unique_ptr<ghoul::opengl::ProgramObject> _inverseDwtRowProgram;
-    std::unique_ptr<ghoul::opengl::ProgramObject> _inverseDwtColProgram;
-
-    std::unique_ptr<ghoul::opengl::Texture> _fboTex1;
-    std::unique_ptr<ghoul::opengl::Texture> _fboTex2;
-
-    std::unique_ptr<ghoul::opengl::FramebufferObject> _idwtRowFbo;
-    std::unique_ptr<ghoul::opengl::FramebufferObject> _idwtColFbo;
-
-    bool inversedwtInternal(int level, int startx, int starty, int endx, int endy);
-    bool createFilterTex();
-    void calLength(int startind, int endind, int level, int *llength, int *loffset);
-    int calLevels(int startind, int endind);
-    void createShaders();
-    void createFbos();
-    bool createInvLookupTex(extmode mode);
-    bool createIDATexture(extmode mode, float** tex1, const int& width, const int& height, int& texwidth, int& texheight);
-    // boundary extension function
-    int ext(int index, int datalen, extmode mode);
-    unsigned int _imageSize;
-    unsigned int _texwidth;
-    unsigned int _texheight;
-};
-
-} // namespace openspace
-
-#endif // __OPENSPACE_MODULE_SOLARBROWSING___J2KGPU___H__
+    Fragment frag;
+    frag.color = diffuse;
+    frag.depth = 1.0;
+    return frag;
+}

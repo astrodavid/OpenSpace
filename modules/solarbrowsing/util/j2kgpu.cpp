@@ -28,6 +28,7 @@
 #include <ghoul/opengl/textureunit.h>
 #include <modules/solarbrowsing/rendering/renderablespacecraftcameraplane.h>
 #include <iostream>
+#include <openspace/engine/openspaceengine.h>
 
 // 1. Decode job (buffer) is only to read in file. => Buffer will be constantly full
 // 2. Send texture as usual to GPU. But with RAW data
@@ -63,24 +64,24 @@ void J2KGpu::inversedwt(/*float* imageBuffer, */int level) {
 bool J2KGpu::inversedwtInternal(int level, int startx, int starty, int endx, int endy) {
 
   // Activate row shader
-  _inverseDwtRow->activate();
-  _inverseDwtRow->setUniform("level", level);
+  _inverseDwtRowProgram->activate();
+  _inverseDwtRowProgram->setUniform("level", level);
 
   // Inverse lookup texture
   ghoul::opengl::TextureUnit lookupUnit;
   lookupUnit.activate();
   glBindTexture(GL_TEXTURE_RECTANGLE_NV, _lookupTexID);
-  _inverseDwtRow->setUniform("lut", lookupUnit);
+  _inverseDwtRowProgram->setUniform("lut", lookupUnit);
 
   // Filter texture
   ghoul::opengl::TextureUnit filterUnit;
   glBindTexture(GL_TEXTURE_RECTANGLE_NV, _reconFilterTexID);
-  _inverseDwtRow->setUniform("filter", filterUnit);
+  _inverseDwtRowProgram->setUniform("filter", filterUnit);
 
-  glDispatchCompute(4096, 4096, 1);
+//  glDispatchCompute(4096, 4096, 1);
   glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-  _inverseDwtRow->deactivate();
+  _inverseDwtRowProgram->deactivate();
   //_inverseDwtCol->activate();
   // Bind textures...
   //_inverseDwtCol->deactivate();
@@ -111,11 +112,22 @@ void J2KGpu::createFbos() {
                     ghoul::opengl::Texture::FilterMode::Nearest,
                     ghoul::opengl::Texture::WrappingMode::ClampToEdge
                 );
-  _idwtColFbo->attachTexture(_fboTex2);
+  _idwtColFbo->attachTexture(_fboTex2.get());
 }
 
 void J2KGpu::createShaders() {
-  std::string invRowName = "InverseDwtRowProgram";
+  RenderEngine& renderEngine = OsEng.renderEngine();
+  _inverseDwtRowProgram = renderEngine.buildRenderProgram("InverseDwtRowProgram",
+    "${MODULE_SOLARBROWSING}/shaders/inversedwt_vs.glsl",
+    "${MODULE_SOLARBROWSING}/shaders/inversedwtrow_fs.glsl"
+  );
+
+  _inverseDwtColProgram = renderEngine.buildRenderProgram("InverseDwtRowProgram",
+    "${MODULE_SOLARBROWSING}/shaders/inversedwt_vs.glsl",
+    "${MODULE_SOLARBROWSING}/shaders/inversedwtcol_fs.glsl"
+  );
+
+  //std::string invRowName = "InverseDwtRowProgram";
   //std::string invColName = "InverseDwtColProgram";
 
   //_inverseDwtRow = std::make_unique<ghoul::opengl::ProgramObject>(invRowName);
