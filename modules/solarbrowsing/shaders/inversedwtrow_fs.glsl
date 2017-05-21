@@ -24,10 +24,12 @@
 
 #include "fragment.glsl"
 
-uniform sampler2D imageryTextureCompressed;
+uniform sampler2DRect compressedImageryTexture;
+in vec4 vs_positionScreenSpace;
+in vec2 vs_st;
 
 Fragment getFragment() {
-    vec4 diffuse = vec4(0.0, 1.0, 1.0, 1.0);
+    vec4 diffuse = texture(compressedImageryTexture, vs_st);
 
     Fragment frag;
     frag.color = diffuse;

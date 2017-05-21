@@ -41,6 +41,9 @@
 #include <chrono>
 #include <math.h>
 
+#include <fstream>
+#include <iterator>
+
 using namespace ghoul::opengl;
 using namespace std::chrono;
 
@@ -594,17 +597,27 @@ void RenderableSpacecraftCameraPlane::updateTextureGPU(bool asyncUpload, bool re
     // }
 
     // Get data
-    float* tempdata = new float[_imageSize * _imageSize];
-    for (int i = 0; i < _imageSize * _imageSize; ++i) {
-        tempdata[i] = 0.f;
+    // float* tempdata = new float[_imageSize * _imageSize];
+    // for (int i = 0; i < _imageSize * _imageSize; ++i) {
+    //     tempdata[i] = 0.f;
+    // }
+
+    std::ifstream input("/Users/michaelnoven/openjpeg/build/bin/aia.jp2", std::ios::binary );
+    // copies all data into buffer
+    std::vector<char> buffer((
+            std::istreambuf_iterator<char>(input)),
+            (std::istreambuf_iterator<char>()));
+
+    std::vector<float> fbuf(4096 * 4096);
+    for (int i = 0; i < buffer.size(); i++) {
+        fbuf[i] = buffer[i];
     }
 
     // Upload image data to texture
     _texture->bind();
-    glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_R32F, _imageSize, _imageSize, 0, GL_RED, GL_FLOAT, tempdata);
+    glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_R32F, _imageSize, _imageSize, 0, GL_RED, GL_FLOAT, &fbuf[0]);
     _j2kgpu.inversedwt(1, _texture.get());
-
-    delete[] tempdata;
+    //delete[] tempdata;
 }
 
 void RenderableSpacecraftCameraPlane::decode(unsigned char* buffer,
