@@ -62,8 +62,8 @@ bool RenderableSpacecraftCameraSphere::initialize() {
     _planeDependencies
           = OsEng.renderEngine().scene()->sceneGraphNode(_nodeName)->dependencies();
 
-    //std::string path = "/Users/michaelnoven/workspace/OpenSpace/data/hmimap1.fits";
-    std::string path = "/home/noven/workspace/OpenSpace/data/hmimap1.fits";
+    std::string path = "/Users/michaelnoven/workspace/OpenSpace/data/hmimap1.fits";
+    //std::string path = "/home/noven/workspace/OpenSpace/data/hmimap1.fits";
     FitsFileReader::open(path);
     std::valarray<float> imageData = FitsFileReader::readImage<float>();
     FitsFileReader::close();

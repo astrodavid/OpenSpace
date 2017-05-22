@@ -596,28 +596,16 @@ void RenderableSpacecraftCameraPlane::updateTextureGPU(bool asyncUpload, bool re
     //     delete[] data;
     // }
 
-    // Get data
-    // float* tempdata = new float[_imageSize * _imageSize];
-    // for (int i = 0; i < _imageSize * _imageSize; ++i) {
-    //     tempdata[i] = 0.f;
-    // }
-
-    std::ifstream input("/Users/michaelnoven/openjpeg/build/bin/aia.jp2", std::ios::binary );
-    // copies all data into buffer
+    // TODO: Need to figure out how to read raw compressed data from .jp2
+    std::ifstream input("/Users/michaelnoven/openjpeg/build/bin/aia.jp2", std::ios::binary);
     std::vector<char> buffer((
             std::istreambuf_iterator<char>(input)),
             (std::istreambuf_iterator<char>()));
 
-    std::vector<float> fbuf(4096 * 4096);
-    for (int i = 0; i < buffer.size(); i++) {
-        fbuf[i] = buffer[i];
-    }
-
     // Upload image data to texture
     _texture->bind();
-    glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_R32F, _imageSize, _imageSize, 0, GL_RED, GL_FLOAT, &fbuf[0]);
+    glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_R32F, _imageSize, _imageSize, 0, GL_RED, GL_FLOAT, nullptr);
     _j2kgpu.inversedwt(1, _texture.get());
-    //delete[] tempdata;
 }
 
 void RenderableSpacecraftCameraPlane::decode(unsigned char* buffer,
@@ -779,16 +767,11 @@ void RenderableSpacecraftCameraPlane::render(const RenderData& data) {
    // _planeShader->setUniform("magicPlaneFactor", _magicPlaneFactor);
     _planeShader->setUniform("magicPlaneOffset", _magicPlaneOffset);
 
+    // Bind decoded texture from last FBO
     ghoul::opengl::TextureUnit imageUnit;
     imageUnit.activate();
-    const GLuint& fboid = _j2kgpu._fboTexRowTextureId;
+    const GLuint& fboid = _j2kgpu._fboTexColTextureId;
     glBindTexture(GL_TEXTURE_RECTANGLE, fboid);
-
-    //LDEBUG("AND BINDING ID " << _j2kgpu._fboTexRowTextureId);
-    //_j2kgpu._fboTexRow->bind();
-
-    //_j2kgpu._fboTexRow->bind();
-    //_texture->bind();
     _planeShader->setUniform("imageryTexture", imageUnit);
 
     //_tfMap[_currentActiveInstrument]->bind(); // Calls update internally

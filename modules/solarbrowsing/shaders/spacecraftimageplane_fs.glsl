@@ -113,16 +113,8 @@ Fragment getFragment() {
     // outColor = vec4(outColor.xyz, planeOpacity);
 
     vec4 outColor;
-
-    float inten =  texture(imageryTexture, vs_st * 4096.0).r;
-   // outColor = vec4(1.0, 0.0, 0.0, 1.0);
-    // if (inten == 0.0) {
-    //     outColor = vec4(1.0, 0.0, 0.0, 1.0);
-    // } else {
-    //     outColor = vec4(1.0, 1.0, 1.0, 1.0);
-    // }
-    outColor = vec4(inten,0.0,0.0, 1.0);
-    //outColor = vec4(1.0, 0.0, 0.0, 1.0);
+    vec4 tmp = texture(imageryTexture, vs_st);
+    outColor = vec4(tmp.r,tmp.g,tmp.b, 1.0);
 
     Fragment frag;
     frag.color = outColor;
