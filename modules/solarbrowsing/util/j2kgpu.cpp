@@ -115,20 +115,40 @@ bool J2KGpu::inversedwtInternal(int level, int startx, int starty, int endx, int
   glBindVertexArray(_fullScreenQuad);
   glDrawArrays(GL_TRIANGLES, 0, 6);
 
-  // Set back viewport size
+  _inverseDwtRowProgram->deactivate();
+  _idwtRowFbo->deactivate();
+
+  //============== COL ================//
+  _idwtColFbo->activate();
+  _inverseDwtColProgram->activate();
+
+  // Set uniforms
+  _inverseDwtColProgram->setUniform("level", static_cast<float>(level));
+  _inverseDwtColProgram->setUniform("texwidth", _texwidth);
+  _inverseDwtColProgram->setUniform("texheight", _texheight);
+
+  _inverseDwtColProgram->setUniform("lut", lookupUnit);
+  _inverseDwtColProgram->setUniform("filterTex", filterUnit);
+
+  // // Bind texture from previous fbo
+  ghoul::opengl::TextureUnit imageUnit2;
+  imageUnit2.activate();
+  glBindTexture(GL_TEXTURE_RECTANGLE, _fboTexRowTextureId);
+  _inverseDwtColProgram->setUniform("compressedImageryTexture", imageUnit2);
+
+  // // Draw again
+  glBindVertexArray(_fullScreenQuad);
+  glDrawArrays(GL_TRIANGLES, 0, 6);
+
+  _inverseDwtColProgram->deactivate();
+  _idwtColFbo->deactivate();
+
+  // // Set back viewport size
   glViewport(viewPortSize[0], viewPortSize[1], viewPortSize[2], viewPortSize[3]);
   // Activate scissor test
   if (isScissorTestEnabled) {
     glEnable(GL_SCISSOR_TEST);
   }
-
-  _inverseDwtRowProgram->deactivate();
-  _idwtRowFbo->deactivate();
-
-  // Tex1 now holds
-  //_inverseDwtCol->activate();
-  // Bind textures...
-  //_inverseDwtCol->deactivate();
 }
 
 void J2KGpu::createFullScreenQuad() {
@@ -178,7 +198,6 @@ void J2KGpu::createFbos() {
   // Generate texture
   _fboTexRowTextureId = 0;
   glGenTextures(1, &_fboTexRowTextureId);
-  std::cerr << "GENERATING ID " << _fboTexRowTextureId;
   // Bind and generate texture parameters
   // Bind texture for IDWT
   glBindTexture(GL_TEXTURE_RECTANGLE, _fboTexRowTextureId);
@@ -188,10 +207,15 @@ void J2KGpu::createFbos() {
   glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
   // Allocate some memory
-  unsigned int arraySize = _imageSize * _imageSize * sizeof(float) * 4;
-  _pixels = new GLubyte[arraySize];
-  std::memset(_pixels, 0, arraySize);
-  glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA32F, _imageSize, _imageSize, 0, GL_RGBA, GL_FLOAT, _pixels);
+  // unsigned int arraySize = _imageSize * _imageSize * sizeof(float) * 4;
+  // GLubyte* _pixels = new GLubyte[arraySize];
+  // std::memset(_pixels, 0, arraySize);
+  float* data = new float[_imageSize * _imageSize * 4];
+  for (int i = 0; i < _imageSize * _imageSize * 4; ++i){
+    data[i] = 0.f;
+  }
+
+  glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA32F, _imageSize, _imageSize, 0, GL_RGBA, GL_FLOAT, data);
 
   _idwtRowFbo = std::make_unique<ghoul::opengl::FramebufferObject>();
   _idwtRowFbo->activate();
@@ -201,24 +225,26 @@ void J2KGpu::createFbos() {
   _idwtRowFbo->deactivate();
 
   // Col FBO
- //  _fboTexCol = std::make_unique<ghoul::opengl::Texture>(
- //                    nullptr,
- //                    glm::size3_t(_imageSize, _imageSize, 1),
- //                    ghoul::opengl::Texture::RGBA,
- //                    GL_RGBA32F,
- //                    GL_FLOAT,
- //                    ghoul::opengl::Texture::FilterMode::Nearest,
- //                    ghoul::opengl::Texture::WrappingMode::ClampToEdge
- //                );
- //  _fboTexCol->bind();
- //  _fboTexCol->uploadTexture();
- // // _fboTexCol->setType(GL_TEXTURE_RECTANGLE);
- //  //glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA32F, _imageSize, _imageSize, 0, GL_RGBA, GL_FLOAT, nullptr);
+  _fboTexColTextureId = 0;
+  glGenTextures(1, &_fboTexColTextureId);
 
- //  _idwtColFbo = std::make_unique<ghoul::opengl::FramebufferObject>();
- //  _idwtColFbo->activate();
- //  _idwtColFbo->attachTexture(_fboTexCol.get());
- //  _idwtColFbo->deactivate();
+  // Bind texture for col fbo
+  glBindTexture(GL_TEXTURE_RECTANGLE, _fboTexColTextureId);
+  glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+  float* data1 = new float[_imageSize * _imageSize * 4];
+  for (int i = 0; i < _imageSize * _imageSize * 4; ++i){
+    data1[i] = 0.f;
+  }
+
+  glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA32F, _imageSize, _imageSize, 0, GL_RGBA, GL_FLOAT, data1);
+  _idwtColFbo = std::make_unique<ghoul::opengl::FramebufferObject>();
+  _idwtColFbo->activate();
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_RECTANGLE, _fboTexColTextureId, 0);
+  _idwtColFbo->deactivate();
 }
 
 void J2KGpu::createShaders() {
@@ -228,7 +254,7 @@ void J2KGpu::createShaders() {
     "${MODULE_SOLARBROWSING}/shaders/inversedwtrow_fs.glsl"
   );
 
-  _inverseDwtColProgram = renderEngine.buildRenderProgram("InverseDwtRowProgram",
+  _inverseDwtColProgram = renderEngine.buildRenderProgram("InverseDwtColProgram",
     "${MODULE_SOLARBROWSING}/shaders/inversedwt_vs.glsl",
     "${MODULE_SOLARBROWSING}/shaders/inversedwtcol_fs.glsl"
   );

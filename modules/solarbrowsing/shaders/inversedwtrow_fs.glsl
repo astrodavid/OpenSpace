@@ -34,6 +34,7 @@ uniform float levelTest;
 
 in vec4 vs_positionScreenSpace;
 in vec2 vs_st;
+layout(location = 0) out vec4 color;
 
 Fragment getFragment() {
 
@@ -44,7 +45,7 @@ Fragment getFragment() {
     // Look up alpha (lut.g) and beta (lut.b)
     lookup = texture(lut, vec2(vs_st.x * 4096.0, level_center)).g;
     filter_st = vec2(lookup*9.0 + 0.5, 0.5); // 0 - low-pass, 1 - high-pass
-    st = vec2(0.0, vs_st.y * 4096.0);
+    st = vec2(0.0, vs_st.y * 4096.0 );
 
     // Look up indirect address (lut.r) & filter values (filter.x) then convolve
     for (int i = 0; i < 9; i++) {
@@ -56,7 +57,7 @@ Fragment getFragment() {
     //vec4 diffuse = texture(compressedImageryTexture, vs_st * 4096.0); //vec4(sum, 1.0);
     //vec4 diffuse = vec4(levelTest, levelTest, levelTest, 1.0);
     vec4 diffuse = vec4(sum, 1.0);
-    ///vec4 diffuse = vec4(1.0, 0.0, 0.0, 1.0);
+    //vec4 diffuse = vec4(0.5, 0.5, 1.0, 1.0);
 
     Fragment frag;
     frag.color = diffuse;

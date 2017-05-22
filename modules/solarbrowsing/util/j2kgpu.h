@@ -38,10 +38,9 @@ public:
     void inversedwt(int level, ghoul::opengl::Texture* compressedTexture);
 
     GLuint _fboTexRowTextureId;
+    GLuint _fboTexColTextureId;
     std::unique_ptr<ghoul::opengl::Texture> _fboTexRow;
     std::unique_ptr<ghoul::opengl::Texture> _fboTexCol;
-    GLubyte* _pixels;
-
 private:
     enum extmode {
       per,
