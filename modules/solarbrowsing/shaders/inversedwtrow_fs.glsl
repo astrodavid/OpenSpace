@@ -1,3 +1,5 @@
+
+
 /*****************************************************************************************
  *                                                                                       *
  * OpenSpace                                                                             *
@@ -25,11 +27,36 @@
 #include "fragment.glsl"
 
 uniform sampler2DRect compressedImageryTexture;
+uniform sampler2DRect filterTex;
+uniform sampler2DRect lut;
+uniform float level;
+uniform float levelTest;
+
 in vec4 vs_positionScreenSpace;
 in vec2 vs_st;
 
 Fragment getFragment() {
-    vec4 diffuse = texture(compressedImageryTexture, vs_st);
+
+    float lookup, level_center = level + 0.5;
+    vec2 st, filter_st;
+    vec3 sum = vec3(0);
+
+    // Look up alpha (lut.g) and beta (lut.b)
+    lookup = texture(lut, vec2(vs_st.x * 4096.0, level_center)).g;
+    filter_st = vec2(lookup*9.0 + 0.5, 0.5); // 0 - low-pass, 1 - high-pass
+    st = vec2(0.0, vs_st.y * 4096.0);
+
+    // Look up indirect address (lut.r) & filter values (filter.x) then convolve
+    for (int i = 0; i < 9; i++) {
+      st.x = texture(lut, vec2(vs_st.x * 4096.0 + i, level_center)).r;
+      // Convolve corresponding filter values with data from level j
+      sum += texture(filterTex, filter_st).xyz * texture(compressedImageryTexture, st).xyz;
+      filter_st.x += 1.0;
+    }
+    //vec4 diffuse = texture(compressedImageryTexture, vs_st * 4096.0); //vec4(sum, 1.0);
+    //vec4 diffuse = vec4(levelTest, levelTest, levelTest, 1.0);
+    vec4 diffuse = vec4(sum, 1.0);
+    ///vec4 diffuse = vec4(1.0, 0.0, 0.0, 1.0);
 
     Fragment frag;
     frag.color = diffuse;

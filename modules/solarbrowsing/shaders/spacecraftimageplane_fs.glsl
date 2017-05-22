@@ -21,7 +21,7 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE  *
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         *
  ****************************************************************************************/
-uniform sampler2D imageryTexture;
+uniform sampler2DRect imageryTexture;
 uniform sampler1D lut;
 uniform bool additiveBlending;
 
@@ -93,24 +93,36 @@ float contrast(float intensity) {
 Fragment getFragment() {
 
     //float intensityOrg = texture(imageryTexture, vec2(vs_st.x + magicPlaneOffset.x, vs_st.y + magicPlaneOffset.y )).r;
-    float intensityOrg = sharpen(vec2( vs_st.x + magicPlaneOffset.x, vs_st.y + magicPlaneOffset.y));
-    intensityOrg = contrast(intensityOrg);
+    // float intensityOrg = sharpen(vec2( vs_st.x + magicPlaneOffset.x, vs_st.y + magicPlaneOffset.y));
+    // intensityOrg = contrast(intensityOrg);
+
+    // vec4 outColor;
+    // if (hasLut) {
+    //     outColor = texture(lut, intensityOrg);
+    // } else {
+    //     outColor = vec4(intensityOrg, intensityOrg, intensityOrg, 1.0);
+    // }
+
+    // outColor.r = pow(outColor.r, gammaValue);
+    // outColor.g = pow(outColor.g, gammaValue);
+    // outColor.b = pow(outColor.b, gammaValue);
+
+    // if (planeOpacity == 0.0)
+    //     discard;
+
+    // outColor = vec4(outColor.xyz, planeOpacity);
 
     vec4 outColor;
-    if (hasLut) {
-        outColor = texture(lut, intensityOrg);
-    } else {
-        outColor = vec4(intensityOrg, intensityOrg, intensityOrg, 1.0);
-    }
 
-    outColor.r = pow(outColor.r, gammaValue);
-    outColor.g = pow(outColor.g, gammaValue);
-    outColor.b = pow(outColor.b, gammaValue);
-
-    if (planeOpacity == 0.0)
-        discard;
-
-    outColor = vec4(outColor.xyz, planeOpacity);
+    float inten =  texture(imageryTexture, vs_st * 4096.0).r;
+   // outColor = vec4(1.0, 0.0, 0.0, 1.0);
+    // if (inten == 0.0) {
+    //     outColor = vec4(1.0, 0.0, 0.0, 1.0);
+    // } else {
+    //     outColor = vec4(1.0, 1.0, 1.0, 1.0);
+    // }
+    outColor = vec4(inten,0.0,0.0, 1.0);
+    //outColor = vec4(1.0, 0.0, 0.0, 1.0);
 
     Fragment frag;
     frag.color = outColor;

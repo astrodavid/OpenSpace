@@ -27,7 +27,7 @@
 uniform sampler2D imageryTextureCompressed;
 
 Fragment getFragment() {
-    vec4 diffuse = vec4(0.0, 1.0, 1.0, 1.0);
+    vec4 diffuse = vec4(1.0, 0.0, 0.0, 1.0);
 
     Fragment frag;
     frag.color = diffuse;

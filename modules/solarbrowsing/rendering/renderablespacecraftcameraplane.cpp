@@ -311,7 +311,7 @@ void RenderableSpacecraftCameraPlane::fillBuffer(const double& dt) {
             break;
         }
 
-        const std::string& currentFilename
+    const std::string& currentFilename
               = _imageMetadataMap[_currentActiveInstrument][nextImageIndex].filename;
         auto job = std::make_shared<DecodeJob>(_imageSize, currentFilename,
                                                _resolutionLevel, _verboseMode);
@@ -781,7 +781,13 @@ void RenderableSpacecraftCameraPlane::render(const RenderData& data) {
 
     ghoul::opengl::TextureUnit imageUnit;
     imageUnit.activate();
-    _j2kgpu._fboTexRow->bind();
+    const GLuint& fboid = _j2kgpu._fboTexRowTextureId;
+    glBindTexture(GL_TEXTURE_RECTANGLE, fboid);
+
+    //LDEBUG("AND BINDING ID " << _j2kgpu._fboTexRowTextureId);
+    //_j2kgpu._fboTexRow->bind();
+
+    //_j2kgpu._fboTexRow->bind();
     //_texture->bind();
     _planeShader->setUniform("imageryTexture", imageUnit);
 
