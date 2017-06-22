@@ -40,12 +40,6 @@
 #include <string>
 #include <vector>
 
-namespace ghoul {
-    namespace opengl {
-        class TextureUnit;
-    }
-}
-
 namespace openspace {
 
 class RenderableFieldlinesSequence : public Renderable {
@@ -150,7 +144,6 @@ private:
 
     std::shared_ptr<TransferFunction> _transferFunction;        // Transfer funtion (tf)
 
-    std::unique_ptr<ghoul::opengl::TextureUnit> _textureUnit;
 
     // --------------------------- OpenGL Related ----------------------------
     // shader program related

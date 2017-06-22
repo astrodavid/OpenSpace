@@ -1309,10 +1309,10 @@ void RenderableFieldlinesSequence::render(const RenderData& data) {
         if (_hasExtraVariables) {
             if (_colorMethod == colorMethod::QUANTITY_DEPENDENT) {
                 // TODO MOVE THIS TO UPDATE AND CHECK
-                _textureUnit = std::make_unique<ghoul::opengl::TextureUnit>();
-                _textureUnit->activate();
+                ghoul::opengl::TextureUnit textureUnit;
+                textureUnit.activate();
                 _transferFunction->bind(); // Calls update internally
-                _activeProgramPtr->setUniform("colorMap", _textureUnit->unitNumber());
+                _activeProgramPtr->setUniform("colorMap", textureUnit);
                 _activeProgramPtr->setUniform("isClamping", _isClampingColorValues);
                 _activeProgramPtr->setUniform("transferFunctionLimits",
                                               _transferFunctionLimits[_colorizingQuantity]);
