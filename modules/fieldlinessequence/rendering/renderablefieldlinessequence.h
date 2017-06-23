@@ -98,6 +98,7 @@ private:
     properties::BoolProperty _isMorphing;           // Time interpolation/morphing
     properties::BoolProperty _show3DLines;          // 3D "ropes". Billboards
     properties::BoolProperty _showSeedPoints;
+    properties::BoolProperty _showParticles;
     properties::BoolProperty _useABlending;         // Toggles additive blending on/off
     properties::BoolProperty _useNearestSampling;   // TF: Nearest or linear interpolation
     properties::BoolProperty _usePointDrawing;      // Toggles outputting lines vs points

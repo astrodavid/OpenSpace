@@ -126,6 +126,7 @@ RenderableFieldlinesSequence::RenderableFieldlinesSequence(const ghoul::Dictiona
       _isMorphing("isMorphing", "Morphing", false),
       _show3DLines("show3DLines", "3D Lines", false),
       _showSeedPoints("showSeedPoints", "Show Seed Points", false),
+      _showParticles("showParticles", "Show Particles", false),
       _useABlending("additiveBlending", "Additive Blending", false),
       _useNearestSampling("useNearestSampling", "Nearest Sampling", false),
       _usePointDrawing("togglePointDrawing", "Draw Points", false),
@@ -988,6 +989,7 @@ bool RenderableFieldlinesSequence::initialize() {
     _particleGroup.addProperty(_fieldlineParticleSize);
     _particleGroup.addProperty(_modulusDivider);
     _particleGroup.addProperty(_timeMultiplier);
+    _particleGroup.addProperty(_showParticles);
 
     if (allowSeedPoints) {
         addPropertySubOwner(_seedGroup);
@@ -1295,6 +1297,7 @@ void RenderableFieldlinesSequence::render(const RenderData& data) {
         _activeProgramPtr->setUniform("colorMethod", _colorMethod);
         _activeProgramPtr->setUniform("fieldlineColor", _fieldlineColor);
         _activeProgramPtr->setUniform("fieldlineParticleColor", _fieldlineParticleColor);
+        _activeProgramPtr->setUniform("usingParticles", _showParticles);
         _activeProgramPtr->setUniform("domainLimR", _domainLimR.value() * _scalingFactor);
         _activeProgramPtr->setUniform("domainLimX", _domainLimX.value() * _scalingFactor);
         _activeProgramPtr->setUniform("domainLimY", _domainLimY.value() * _scalingFactor);
