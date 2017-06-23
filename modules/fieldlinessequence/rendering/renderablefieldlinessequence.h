@@ -94,6 +94,7 @@ private:
     ghoul::Dictionary _dictionary;
 
     // ----------------------------- Properties -----------------------------
+    properties::BoolProperty _flipParticleDirection;
     properties::BoolProperty _isClampingColorValues;// == false => fragments are discarded
     properties::BoolProperty _isMorphing;           // Time interpolation/morphing
     properties::BoolProperty _show3DLines;          // 3D "ropes". Billboards

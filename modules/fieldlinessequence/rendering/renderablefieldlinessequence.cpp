@@ -122,6 +122,7 @@ namespace openspace {
 
 RenderableFieldlinesSequence::RenderableFieldlinesSequence(const ghoul::Dictionary& dictionary)
     : Renderable(dictionary),
+      _flipParticleDirection("flipParticleDir", "Reverse Direction", false),
       _isClampingColorValues("isClamping", "Clamp", true),
       _isMorphing("isMorphing", "Morphing", false),
       _show3DLines("show3DLines", "3D Lines", false),
@@ -985,6 +986,7 @@ bool RenderableFieldlinesSequence::initialize() {
     _domainGroup.addProperty(_domainLimZ);
 
     addPropertySubOwner(_particleGroup);
+    _particleGroup.addProperty(_flipParticleDirection);
     _particleGroup.addProperty(_fieldlineParticleColor);
     _particleGroup.addProperty(_fieldlineParticleSize);
     _particleGroup.addProperty(_modulusDivider);
@@ -1298,6 +1300,7 @@ void RenderableFieldlinesSequence::render(const RenderData& data) {
         _activeProgramPtr->setUniform("fieldlineColor", _fieldlineColor);
         _activeProgramPtr->setUniform("fieldlineParticleColor", _fieldlineParticleColor);
         _activeProgramPtr->setUniform("usingParticles", _showParticles);
+        _activeProgramPtr->setUniform("reversedParticleDir", _flipParticleDirection);
         _activeProgramPtr->setUniform("domainLimR", _domainLimR.value() * _scalingFactor);
         _activeProgramPtr->setUniform("domainLimX", _domainLimX.value() * _scalingFactor);
         _activeProgramPtr->setUniform("domainLimY", _domainLimY.value() * _scalingFactor);
