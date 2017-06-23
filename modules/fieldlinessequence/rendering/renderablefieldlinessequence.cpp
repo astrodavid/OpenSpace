@@ -83,6 +83,8 @@ namespace {
     const char* keyExtraColorTablePaths         = "ColorTablePaths";
     const char* keyExtraColorTableMinMaxs       = "ColorTableMinMax";
 
+    const char* keyDefaultColor                 = "DefaultColor";
+
     const char* keyCartesianDomainLimits        = "CartesianDomainLimits";
     const char* keyRadialDomainLimits           = "RadialDomainLimits";
 
@@ -1216,6 +1218,16 @@ bool RenderableFieldlinesSequence::initialize() {
     }
 
     setRenderBin(Renderable::RenderBin::Overlay);
+
+    ////////////////////////////////////////
+    // LAST MINUTE ADDITIONS!!!!!!!!!!!!!!!
+    glm::vec4 tmpColor;
+    if (_dictionary.getValue(keyDefaultColor, tmpColor)) {
+        LDEBUG("Default color set through LUA modfile!");
+        _fieldlineColor = tmpColor;
+    }
+
+    //////////////////////////////////////////////
 
     return true;
 }
