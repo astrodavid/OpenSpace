@@ -1654,8 +1654,6 @@ void RenderableFieldlinesSequence::readNewState(const int activeStateIndex) {
             tmpState);
 
     _newState = std::move(tmpState);
-    _newStateIsReady = true;
-    _isProcessingState = false;
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> diff = end - start;
@@ -1663,6 +1661,9 @@ void RenderableFieldlinesSequence::readNewState(const int activeStateIndex) {
     if (ms > 40) {
         LWARNING("TIME FOR ADDING STATE FROM BINARY: " << ms << " milliseconds. (" << _validSourceFilePaths[activeStateIndex] << ")");
     }
+
+    _newStateIsReady = true;
+    _isProcessingState = false;
 }
 
 } // namespace openspace

@@ -37,6 +37,7 @@
 #include <openspace/rendering/transferfunction.h>
 
 #include <modules/fieldlinessequence/util/fieldlinesstate.h>
+#include <atomic>
 #include <string>
 #include <vector>
 
@@ -57,12 +58,12 @@ public:
 private:
     std::string _loggerCat = "RenderableFieldlinesSequence";
     // -------------------- MAIN VARIABLES, STATE & TIME --------------------
-    bool _isProcessingState     = false;
     bool _loadBinariesAtRuntime = false;
     bool _mustProcessNewState   = false;
     bool _needsUpdate           = false; // If still in same state as previous frame == false
-    bool _newStateIsReady       = false;
     bool _shouldRender          = false; // only temporary, unnecessary?
+    std::atomic<bool> _isProcessingState{false};
+    std::atomic<bool> _newStateIsReady{false};
 
     std::vector<glm::vec3> _seedPoints; // TODO: no need to store these here?
 
