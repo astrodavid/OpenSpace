@@ -1659,13 +1659,13 @@ bool RenderableFieldlinesSequence::getSeedPointsFromDictionary() {
 }
 
 void RenderableFieldlinesSequence::readNewState(const int activeStateIndex) {
-    if (_states.size() > 1) {
-        LERROR("ALREADY MORE THAN ONE STATE IN '_states' VECTOR");
-    }
+    // if (_states.size() > 1) {
+    //     LERROR("ALREADY MORE THAN ONE STATE IN '_states' VECTOR");
+    // }
     FieldlinesState tmpState;
     // _states.push_back(tmpState);
     // size_t numS = _states.size();
-    auto start = std::chrono::high_resolution_clock::now();
+    // auto start = std::chrono::high_resolution_clock::now();
 
     bool statuss = fsManager.getFieldlinesStateFromBinary(
             _validSourceFilePaths[activeStateIndex],
@@ -1673,12 +1673,12 @@ void RenderableFieldlinesSequence::readNewState(const int activeStateIndex) {
 
     _newState = std::move(tmpState);
 
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> diff = end - start;
-    auto ms = diff.count();
-    if (ms > 40) {
-        LWARNING("TIME FOR ADDING STATE FROM BINARY: " << ms << " milliseconds. (" << _validSourceFilePaths[activeStateIndex] << ")");
-    }
+    // auto end = std::chrono::high_resolution_clock::now();
+    // std::chrono::duration<double, std::milli> diff = end - start;
+    // auto ms = diff.count();
+    // if (ms > 40) {
+    //     LWARNING("TIME FOR ADDING STATE FROM BINARY: " << ms << " milliseconds. (" << _validSourceFilePaths[activeStateIndex] << ")");
+    // }
 
     _newStateIsReady = true;
     _isProcessingState = false;
