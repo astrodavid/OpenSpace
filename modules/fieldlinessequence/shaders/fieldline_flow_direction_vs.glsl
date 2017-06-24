@@ -27,6 +27,8 @@
 uniform mat4 modelViewProjection;
 
 uniform bool isClamping;
+uniform bool reversedParticleDir;
+uniform bool usingParticles;
 
 //uniform mat4 modelTransform;
 // uniform int time;
@@ -80,9 +82,14 @@ void main() {
     }
 
     // Color every n-th vertex differently to show fieldline flow direction
-    int modulus = (int(timeD/1000 - gl_VertexID)) % modulusDivider;
+    int direction = 1;
+    if (reversedParticleDir) {
+        direction = -1;
+    }
+
+    int modulus = (int(timeD/1000 + direction * gl_VertexID)) % modulusDivider;
     // int modulus = (gl_VertexID + time) % modulusDivider;
-    if ( modulus > 0 && modulus < flParticleSize) {
+    if ( usingParticles && modulus > 0 && modulus < flParticleSize) {
         if (colorMethod == UNIT_DEPENDENT_COLOR) {
             float lookUpValue = (colorIntensity - transferFunctionLimits.x )
                     / (transferFunctionLimits.y - transferFunctionLimits.x);

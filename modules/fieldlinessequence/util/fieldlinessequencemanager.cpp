@@ -324,7 +324,12 @@ bool FieldlinesSequenceManager::getFieldlinesStateFromBinary(
 
     switch (binFileVersion) {
         case 0 : {
+<<<<<<< HEAD
                 //LDEBUG("BINARY FILE - VERSION 0");
+=======
+                // LDEBUG("BINARY FILE - VERSION 0");
+                // No need to put everything in this scope now, as only version 0 exists!
+>>>>>>> origin/feature/interactivefieldlines
             }
             break;
         default : {
@@ -456,7 +461,7 @@ bool FieldlinesSequenceManager::getFieldlinesState(
     } else if ((*jfile.begin()).find("trace") != (*jfile.begin()).end()) {
         // File is in a format provided by CCMC.. currently 2 different available
 
-        // tmp json variable to determina which CCMC structure it is.
+        // tmp json variable to determine which CCMC structure it is.
         json jsonTmp = *jfile.begin();
         const std::string strTrace = "trace";
         if (jsonTmp.find(strTrace) != jsonTmp.end()) {
@@ -505,8 +510,8 @@ bool FieldlinesSequenceManager::getFieldlinesState(
             //}
 
             // TODO: Don't hardcode this!!
-            const float scalingFactor = R_E_TO_METER;
-            // const float scalingFactor = R_S_TO_METER;
+            const float scalingFactor = R_E_TO_METER; // BATSRUS
+            // const float scalingFactor = R_S_TO_METER; // PFSS
             // const float scalingFactor = A_U_TO_METER;
 
             const size_t numDataVariables = variableNames.size();
@@ -544,8 +549,8 @@ bool FieldlinesSequenceManager::getFieldlinesState(
             }
 
             // TODO REMOVE THIS HARDCODED STUFF!!
-            // outFieldlinesState.setModel(FieldlinesState::Model::pfss);
-            outFieldlinesState.setModel(FieldlinesState::Model::batsrus);
+            // outFieldlinesState.setModel(FieldlinesState::Model::pfss); // PFSS
+            outFieldlinesState.setModel(FieldlinesState::Model::batsrus); // BATSRUS
             size_t numChars = pathToJsonFile.size();
             std::string timeString;
             std::string timeKey = "time";
@@ -563,12 +568,15 @@ bool FieldlinesSequenceManager::getFieldlinesState(
             outFieldlinesState._triggerTime = time;
 
             // Add topology and transition.. TODO remove this or change to check if it exists first
+            // numExtraVariables += 3; // PFSS
             numExtraVariables += 2;
+            // numExtraVariables += 1; // BATSRUS LUTZ
             size_t transitionIdx = extraVarIdx.size();
             size_t topologyIdx   = transitionIdx + 1;
             outFieldlinesState._extraVariableNames.push_back("transition");
-            outFieldlinesState._extraVariableNames.push_back("topology");
-            // outFieldlinesState._extraVariableNames.push_back("bsign");
+            // size_t bsignIdx      = transitionIdx + 2; // PFSS
+            outFieldlinesState._extraVariableNames.push_back("topology"); // BATSRUS & PFSS
+            // outFieldlinesState._extraVariableNames.push_back("bsign"); //PFSS
 
             outFieldlinesState._extraVariables.resize(numExtraVariables);
 
@@ -581,9 +589,9 @@ bool FieldlinesSequenceManager::getFieldlinesState(
                 std::vector<std::vector<float>> jsonData = fieldline[strTrace]["data"];
                 std::string tStr = fieldline["topology"];
                 float topology = (tStr == "solar_wind" ? 0.f : ( tStr == "closed" ? 3.f : (tStr == "north" ? 1.f : 2.f)));
-                // float topology = (tStr == "closed" ? 0.f : (tStr == "open_inward" ? 1.f : 2.f));
+                // float topology = (tStr == "closed" ? 0.f : (tStr == "open_inward" ? 1.f : 2.f)); //PFSS
                 float transition = fieldline["transition"];
-                // float bsign = fieldline["bsign"];
+                // float bsign = fieldline["bsign"]; // PFSS
                 // json jsonData    = fieldline[strTrace]["data"];
                 size_t numPoints = jsonData.size();
 
@@ -597,12 +605,11 @@ bool FieldlinesSequenceManager::getFieldlinesState(
                     }
                     outFieldlinesState._extraVariables[transitionIdx].push_back(transition);
                     outFieldlinesState._extraVariables[topologyIdx].push_back(topology);
-                    // outFieldlinesState._extraVariables[bsignIdx].push_back(bsign);
+                    // outFieldlinesState._extraVariables[bsignIdx].push_back(bsign); // PFSS
                 }
                 outFieldlinesState._lineCount.push_back(numPoints);
                 outFieldlinesState._lineStart.push_back(lineStartIdx);
                 lineStartIdx += numPoints;
-
             }
             // size_t numExtras                = jfile["0. meta"]["4. numExtras"];
             return true;
@@ -1164,7 +1171,7 @@ void FieldlinesSequenceManager::centerSeedPointResampling(
 //
 //    outFieldlinesState._velocityMagnitudes.reserve(samplePositions.size());
 //
-//    
+//
 //
 //    return false;
 //}

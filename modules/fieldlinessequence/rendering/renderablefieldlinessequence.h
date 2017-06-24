@@ -37,14 +37,9 @@
 #include <openspace/rendering/transferfunction.h>
 
 #include <modules/fieldlinessequence/util/fieldlinesstate.h>
+#include <atomic>
 #include <string>
 #include <vector>
-
-namespace ghoul {
-    namespace opengl {
-        class TextureUnit;
-    }
-}
 
 namespace openspace {
 
@@ -63,12 +58,12 @@ public:
 private:
     std::string _loggerCat = "RenderableFieldlinesSequence";
     // -------------------- MAIN VARIABLES, STATE & TIME --------------------
-    bool _isProcessingState     = false;
     bool _loadBinariesAtRuntime = false;
     bool _mustProcessNewState   = false;
     bool _needsUpdate           = false; // If still in same state as previous frame == false
-    bool _newStateIsReady       = false;
     bool _shouldRender          = false; // only temporary, unnecessary?
+    std::atomic<bool> _isProcessingState{false};
+    std::atomic<bool> _newStateIsReady{false};
 
     std::vector<glm::vec3> _seedPoints; // TODO: no need to store these here?
 
@@ -99,10 +94,12 @@ private:
     ghoul::Dictionary _dictionary;
 
     // ----------------------------- Properties -----------------------------
+    properties::BoolProperty _flipParticleDirection;
     properties::BoolProperty _isClampingColorValues;// == false => fragments are discarded
     properties::BoolProperty _isMorphing;           // Time interpolation/morphing
     properties::BoolProperty _show3DLines;          // 3D "ropes". Billboards
     properties::BoolProperty _showSeedPoints;
+    properties::BoolProperty _showParticles;
     properties::BoolProperty _useABlending;         // Toggles additive blending on/off
     properties::BoolProperty _useNearestSampling;   // TF: Nearest or linear interpolation
     properties::BoolProperty _usePointDrawing;      // Toggles outputting lines vs points
@@ -150,7 +147,6 @@ private:
 
     std::shared_ptr<TransferFunction> _transferFunction;        // Transfer funtion (tf)
 
-    std::unique_ptr<ghoul::opengl::TextureUnit> _textureUnit;
 
     // --------------------------- OpenGL Related ----------------------------
     // shader program related
