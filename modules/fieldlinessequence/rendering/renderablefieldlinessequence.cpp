@@ -1129,8 +1129,9 @@ bool RenderableFieldlinesSequence::initialize() {
 
         _transferFunctionPath.onChange([this] {
             // TOGGLE ACTIVE SHADER PROGRAM
-            _transferFunction->setPath(_transferFunctionPath);
-            *_activeColorTable = _transferFunctionPath;
+            std::string tmpString = fsManager.getAbsPath(_transferFunctionPath);
+            _transferFunction->setPath(tmpString);
+            *_activeColorTable = tmpString;
         });
 
         _transferFunctionMinVal.onChange([this] {
