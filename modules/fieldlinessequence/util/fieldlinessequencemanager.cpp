@@ -408,7 +408,14 @@ bool FieldlinesSequenceManager::getFieldlinesState(
         return false;
     }
     json jfile;// = json::parse(ifs);
-    ifs >> jfile;
+
+    try {
+        ifs >> jfile;
+    } catch (json::parse_error e) {
+        LERROR("FAILED TO PARSE");
+        // throw std::invalid_argument( "received unrecogniseable value maybe NaN or infinity or some other shit" );
+        return false;
+    }
 
     // if the JSON file contains the key "0. meta" it is in fieldline state format
     if (jfile.find("0. meta") != jfile.end()) {
@@ -549,13 +556,22 @@ bool FieldlinesSequenceManager::getFieldlinesState(
             // outFieldlinesState.setModel(FieldlinesState::Model::pfss); // PFSS
             outFieldlinesState.setModel(FieldlinesState::Model::batsrus); // BATSRUS
             size_t numChars = pathToJsonFile.size();
+            // std::string timeString = pathToJsonFile.substr(numChars - 32, 19);
+            // timeString = timeString.substr(0, 4) + "-" + timeString.substr(4, 2) + "-" +
+            //              timeString.substr(6, 2) + "T" + timeString.substr(9, 2) + ":" +
+            //              timeString.substr(11,2) + ":" + timeString.substr(13,2) + "." +
+            //              timeString.substr(16,2);
+            // std::string timeString = "2012-07-10T00:00:00.00";
+            // std::string timeString = "2012-07-14T09:54:00.00";
+            // std::string timeString = "2012-07-12T12:12:00.00";
+
             std::string timeString;
             std::string timeKey = "time";
             if (jsonTmp.find(timeKey) != jsonTmp.end()) {
                 timeString = jsonTmp[timeKey];
             } else {
-                // File name should be in the format "<SOME_PATH_TO_FOLDER>/YYYYMMDD-HHMMSS.json"
-                timeString = pathToJsonFile.substr(numChars - 20, 15);
+                // File name should be in the format "<SOME_PATH_TO_FOLDER>/YYYYMMDD-HHMMSS-XXX.json"
+                timeString = pathToJsonFile.substr(numChars - 24, 15);
 
             }
             timeString = timeString.substr(0, 4) + "-" + timeString.substr(4, 2) + "-" +
@@ -566,12 +582,14 @@ bool FieldlinesSequenceManager::getFieldlinesState(
 
             // Add topology and transition.. TODO remove this or change to check if it exists first
             // numExtraVariables += 3; // PFSS
-            numExtraVariables += 2;
-            // numExtraVariables += 1; // BATSRUS LUTZ
+            // numExtraVariables += 2; // BATRSUS ASHER
+            numExtraVariables += 1; // BATSRUS LUTZ
             size_t transitionIdx = extraVarIdx.size();
-            size_t topologyIdx   = transitionIdx + 1;
-            outFieldlinesState._extraVariableNames.push_back("transition");
-            // size_t bsignIdx      = transitionIdx + 2; // PFSS
+            // size_t topologyIdx   = transitionIdx + 1; // BATSRUS ASHER
+            size_t topologyIdx   = transitionIdx; // BATSRUS LUTZ
+            // size_t bsignIdx      = transitionIdx + 1; //PFSS
+            // size_t bsignIdx      = transitionIdx + 2;
+            // outFieldlinesState._extraVariableNames.push_back("transition");
             outFieldlinesState._extraVariableNames.push_back("topology"); // BATSRUS & PFSS
             // outFieldlinesState._extraVariableNames.push_back("bsign"); //PFSS
 
@@ -587,11 +605,28 @@ bool FieldlinesSequenceManager::getFieldlinesState(
                 std::string tStr = fieldline["topology"];
                 float topology = (tStr == "solar_wind" ? 0.f : ( tStr == "closed" ? 3.f : (tStr == "north" ? 1.f : 2.f)));
                 // float topology = (tStr == "closed" ? 0.f : (tStr == "open_inward" ? 1.f : 2.f)); //PFSS
-                float transition = fieldline["transition"];
+                // float transition = fieldline["transition"]; // BATRSUS ASHER
                 // float bsign = fieldline["bsign"]; // PFSS
                 // json jsonData    = fieldline[strTrace]["data"];
                 size_t numPoints = jsonData.size();
 
+                // TODO REMOVE THESE LINES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1111 //BATSRUS
+                const std::vector<float>& f = jsonData[0];
+                const std::vector<float>& l = jsonData[numPoints-1];
+                glm::vec3 ps = glm::vec3(f[xIdx], f[yIdx], f[zIdx]);
+                glm::vec3 pe = glm::vec3(l[xIdx], l[yIdx], l[zIdx]);
+                float f1 = glm::length(ps);
+                float f2 = glm::length(pe);
+                bool np = false;
+                bool sp = false;
+                if (f1 < 4.f) np = true;
+                if (f2 < 4.f) sp = true;
+
+                if      ( np &&  sp) { topology = 3.f; }
+                else if (!np && !sp) { topology = 0.f; }
+                else if ( np && !sp) { topology = 1.f; }
+                else    { topology = 2.f; }
+                ///////////////////////////
 
                 for (size_t j = 0; j < numPoints; ++j) {
                     const std::vector<float>& variables = jsonData[j];
@@ -600,7 +635,7 @@ bool FieldlinesSequenceManager::getFieldlinesState(
                     for (size_t k = 0; k < extraVarIdx.size(); ++k ) {
                         outFieldlinesState._extraVariables[k].push_back(variables[extraVarIdx[k]]);
                     }
-                    outFieldlinesState._extraVariables[transitionIdx].push_back(transition);
+                    // outFieldlinesState._extraVariables[transitionIdx].push_back(transition);
                     outFieldlinesState._extraVariables[topologyIdx].push_back(topology);
                     // outFieldlinesState._extraVariables[bsignIdx].push_back(bsign); // PFSS
                 }
@@ -765,7 +800,7 @@ bool FieldlinesSequenceManager::getFieldlinesState(
     }
 
     // --- DETERMINE HOW AND WHEN TO CONVERT FROM CCMC::FIELDLINE IN MODEL COORDINATES ---
-    // ---            TO GLM::VEC3 IN PROPERLY SCALED CARTESIAN COORDINATES            ---
+    // ---            TO GLM::VEC3 IN PROPERLY SCALED CARTESqIAN COORDINATES            ---
     // ResamplingOption = 1, 2 and 3 uses CCMC's built in resampling which requires
     // the ccmc::Fieldline variable. Resample before conversion to glm::vec3! Other
     // options (4) requires the transformation to the correct coordinate system first
@@ -883,6 +918,7 @@ bool FieldlinesSequenceManager::getFieldlinesState(
 
         // IMPORTANT!: Remember to delete interpolator if creating it here!
         ccmc::Interpolator* interpolator = kameleon->createNewInterpolator();
+        // ccmc::Tracer tracer(kameleon.get(), interpolator);
         ccmc::Tracer tracer(kameleon, interpolator);
         tracer.setDn(tracingStepLength);
         // ccmc::Tracer tracer(kameleon.get());

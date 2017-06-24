@@ -39,6 +39,7 @@
 #include <modules/fieldlinessequence/util/fieldlinesstate.h>
 #include <atomic>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace openspace {
@@ -147,6 +148,7 @@ private:
 
     std::shared_ptr<TransferFunction> _transferFunction;        // Transfer funtion (tf)
 
+    // std::unique_ptr<ghoul::opengl::TextureUnit> _textureUnit;
 
     // --------------------------- OpenGL Related ----------------------------
     // shader program related
@@ -182,12 +184,14 @@ private:
 
     std::string _scalingFactorUnit;
 
+    // std::thread _fileReadingThread;
+
     bool getSourceFilesFromDictionary(const std::string& fileExt, std::vector<std::string>& validSourceFilePaths);
     bool getSeedPointsFromDictionary();
     bool getUnsignedIntFromModfile(const std::string& key, unsigned int& val);
     bool isWithinSequenceInterval();
 
-    void readNewState(const int activeStateIndex/*const std::string& filepath, std::vector<FieldlinesState>& states*/);
+    void readNewState(const int activeStateIndex, const std::string filepath);
     void updateActiveStateIndex();
     void updateColorBuffer();
     void updateDomainBuffer();

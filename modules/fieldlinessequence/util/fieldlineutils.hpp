@@ -27,7 +27,7 @@ int getFieldlineTopology(const FieldlinesState::Model& model,
     np = f1 < radius ? true : false;
     sp = f2 < radius ? true : false;
     if (model == FieldlinesState::Model::batsrus) {
-
+        // TODO: It really shouldn't be enough to look at the end points.. should probably also make sure that they actually are close to the corresponding pole.. north pole => positive z-component
         if      ( np &&  sp)  { return static_cast<int>(BatsrusTopology::Closed); }
         else if (!np && !sp)  { return static_cast<int>(BatsrusTopology::SolarWind); }
         else if ( np && !sp)  { return static_cast<int>(BatsrusTopology::North); }

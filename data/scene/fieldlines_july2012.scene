@@ -9,15 +9,9 @@ function preInitialization()
     openspace.spice.loadKernel("${SPICE}/naif0012.tls")
     openspace.spice.loadKernel("${SPICE}/pck00010.tpc")
 
-    openspace.time.setTime("2012 JUL 01 00:00:00.000") -- EVENT JULY 2012
-
-
-    -- openspace.time.setTime("2015 MAR 14 23:59:58.000") -- BATSRUS time
-    -- openspace.time.setTime("2012 JUL 15 19:12:14.000") -- New BATSRUS time EVENT
-    -- openspace.time.setTime("2015 FEB 28 00:05:28.000") -- Old ENLIL time LMAYS
-    -- openspace.time.setTime("2015 JUN 30 09:17:32.000") -- ENLIL time
-    -- openspace.time.setTime("2010 OCT 16 07:30:00.000") -- ENLIL (Aisla) time
-    -- openspace.time.setTime("2010 OCT 30 14:19:54.000") -- ENLIL (Aisla) actual time
+    openspace.time.setTime("2012 JUL 01 00:00:00.000") -- EVENT JULY 2012 (START)
+    -- openspace.time.setTime("2012 JUL 12 00:00:00.000") -- EVENT JULY 2012 (First CME)
+    -- openspace.time.setTime("2012 JUL 14 00:00:00.000") -- EVENT JULY 2012 (BATRUS START)
 
     dofile(openspace.absPath('${SCRIPTS}/bind_keys_fieldlinessequence.lua'))
         -- dofile(openspace.absPath('${SCRIPTS}/bind_common_keys.lua'))
@@ -89,6 +83,10 @@ return {
         "milkyway",
         -- "milkyway-eso",
         "constellationbounds",
-        "fieldlinessequence",
+        "fieldlinessequence/customkernels/hnm_ref_frame",
+        "fieldlinessequence/customkernels/gsm_ref_frame",
+        "fieldlinessequence/july2012/batsrus_fl_july2012",
+        "fieldlinessequence/july2012/enlil_fl_july2012",
+        "fieldlinessequence/july2012/pfss_fl_july2012",
     }
 }

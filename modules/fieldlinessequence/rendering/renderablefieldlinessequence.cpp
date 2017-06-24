@@ -627,12 +627,12 @@ bool RenderableFieldlinesSequence::initialize() {
                                              numResamples,
                                              resamplingOption,
                                              _states[i]);
-                {
-                    // TODO: Delete this scope!!
-                    _states[i]._extraVariables.pop_back();
-                    _states[i]._extraVariableNames.pop_back();
-                    _states[i].calculateTopologies(3.1f*R_E_TO_METER);
-                }
+                // {
+                //     // TODO: Delete this scope!!
+                //     _states[i]._extraVariables.pop_back();
+                //     _states[i]._extraVariableNames.pop_back();
+                //     _states[i].calculateTopologies(3.1f*R_E_TO_METER);
+                // }
                 // TODO: Move elsewhere
                 _startTimes.push_back(_states[i]._triggerTime);
 
@@ -643,11 +643,12 @@ bool RenderableFieldlinesSequence::initialize() {
                                    ".osfls");
                     LINFO("Saving file to: " << filePath);
                     _states[i].saveStateToBinaryFile(filePath);
-                    // filePath =
-                    //         fsManager.getAbsPath(outputBinaryLoc + "downsampled/" +
-                    //                fsManager.timeToString(_states[i]._triggerTime, true) +
-                    //                ".osfls");
-                    // _states[i].saveStateSubsetToBinaryFile(filePath, 4);
+                    filePath =
+                            fsManager.getAbsPath(outputBinaryLoc + "downsampled4/" +
+                                   fsManager.timeToString(_states[i]._triggerTime, true) +
+                                   ".osfls");
+                    LINFO("Saving file to: " << filePath);
+                    _states[i].saveStateSubsetToBinaryFile(filePath, 4);
 
                     // TODO REMOVE THIS OR ADD AS OPTION IN LUA MODFILE!
                     // DELETE STATE TO CLEAR MEMORY FOR A PREPROCESS RUN
@@ -714,7 +715,8 @@ bool RenderableFieldlinesSequence::initialize() {
                     _states.push_back(tmpState);
                     bool statuss = fsManager.getFieldlinesStateFromBinary(
                         _validSourceFilePaths[i],
-                        _states[i]);
+                        _states[i]); //TODO add back
+                        // tmpState);
 
                     // TODO: REMOVE.. JUST FOR DEBUG/PERFORMANCE TESTS
                     auto end = std::chrono::high_resolution_clock::now();
@@ -722,7 +724,9 @@ bool RenderableFieldlinesSequence::initialize() {
                     LDEBUG("TIME FOR ADDING STATE FROM BINARY: " << diff.count() << " milliseconds");
 
                     // TODO: Move elsewhere
+                    // TODO add back
                     _startTimes.push_back(_states[i]._triggerTime);
+                    // _startTimes.push_back(tmpState._triggerTime);
                     // TODO: Delete the rest in this scope!!
                     // _states[i]._extraVariables.pop_back();
                     // _states[i]._extraVariableNames.pop_back();
@@ -730,9 +734,10 @@ bool RenderableFieldlinesSequence::initialize() {
                     std::string filePath = _validSourceFilePaths[i];
                     std::string fileName = filePath.substr(filePath.size()-29, 29);
 
-                    size_t dwnSmpl = 1;
-                    std::string filePath0 = filePath.substr(0,filePath.size()-29) + "downsampled" + std::to_string(dwnSmpl) + "/" + fileName;
-                    _states[i].saveStateSubsetToBinaryFile(fsManager.getAbsPath(filePath0), dwnSmpl);
+                    size_t dwnSmpl = 2;
+                    // std::string filePath0 = filePath.substr(0,filePath.size()-29) + "downsampled" + std::to_string(dwnSmpl) + "/" + fileName;
+                    // //TODO add back _states[i].saveStateSubsetToBinaryFile(fsManager.getAbsPath(filePath0), dwnSmpl);
+                    // tmpState.saveStateSubsetToBinaryFile(fsManager.getAbsPath(filePath0), dwnSmpl);
 
                     dwnSmpl = 2;
                     std::string filePath1 = filePath.substr(0,filePath.size()-29) + "downsampled" + std::to_string(dwnSmpl) + "/" + fileName;
@@ -742,7 +747,7 @@ bool RenderableFieldlinesSequence::initialize() {
                     std::string filePath2 = filePath.substr(0,filePath.size()-29) + "downsampled" + std::to_string(dwnSmpl) + "/" + fileName;
                     _states[i].saveStateSubsetToBinaryFile(fsManager.getAbsPath(filePath2), dwnSmpl);
                     // _states.pop_back();
-                    // // // add new empty state to not screw with for-loop calling _state[i]
+                    // // add new empty state to not screw with for-loop calling _state[i]
                     // _states.push_back(FieldlinesState());
                 }
             }
@@ -1439,8 +1444,9 @@ void RenderableFieldlinesSequence::update(const UpdateData& data) {
         if (!_isProcessingState && !_newStateIsReady) {
                 _isProcessingState = true;
                 _mustProcessNewState = false;
-                std::thread readBinaryThread([this] {
-                    this->readNewState(this->_activeStateIndex);
+                std::string filepath = _validSourceFilePaths[_activeStateIndex];
+                std::thread readBinaryThread([this, filepath] {
+                    this->readNewState(this->_activeStateIndex, filepath);
                 });
                 // std::thread readBinaryThread(&RenderableFieldlinesSequence::readNewState, _activeStateIndex, this);
                 readBinaryThread.detach();
@@ -1658,7 +1664,7 @@ bool RenderableFieldlinesSequence::getSeedPointsFromDictionary() {
     return true;
 }
 
-void RenderableFieldlinesSequence::readNewState(const int activeStateIndex) {
+void RenderableFieldlinesSequence::readNewState(const int activeStateIndex, const std::string filepath) {
     if (_states.size() > 1) {
         LERROR("ALREADY MORE THAN ONE STATE IN '_states' VECTOR");
     }
@@ -1668,7 +1674,7 @@ void RenderableFieldlinesSequence::readNewState(const int activeStateIndex) {
     auto start = std::chrono::high_resolution_clock::now();
 
     bool statuss = fsManager.getFieldlinesStateFromBinary(
-            _validSourceFilePaths[activeStateIndex],
+            filepath,
             tmpState);
 
     _newState = std::move(tmpState);
@@ -1677,7 +1683,7 @@ void RenderableFieldlinesSequence::readNewState(const int activeStateIndex) {
     std::chrono::duration<double, std::milli> diff = end - start;
     auto ms = diff.count();
     if (ms > 40) {
-        LWARNING("TIME FOR ADDING STATE FROM BINARY: " << ms << " milliseconds. (" << _validSourceFilePaths[activeStateIndex] << ")");
+        LWARNING("TIME FOR ADDING STATE FROM BINARY: " << ms << " milliseconds. (" << filepath << ")");
     }
 
     _newStateIsReady = true;

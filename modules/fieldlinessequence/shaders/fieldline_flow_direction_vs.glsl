@@ -72,11 +72,14 @@ void main() {
     fragment_discard = 1.0;
 
     // Check domain limits
-    if (in_position.x   < domainLimX.x     || in_position.x   > domainLimX.y ||
+    if (
+        in_position.x   < domainLimX.x     || in_position.x   > domainLimX.y ||
         in_position.y   < domainLimY.x     || in_position.y   > domainLimY.y ||
         in_position.z   < domainLimZ.x     || in_position.z   > domainLimZ.y ||
-        radius          < domainLimR.x     || radius          > domainLimR.y ||
-        domainIntensity < tFIterestRange.x || domainIntensity > tFIterestRange.y) {
+        radius          < domainLimR.x     || radius          > domainLimR.y 
+        ||
+        domainIntensity < tFIterestRange.x || domainIntensity > tFIterestRange.y
+        ) {
 
         fragment_discard = 0.0;
     }
@@ -97,7 +100,7 @@ void main() {
             vs_color = vec4(color.xyz,fieldlineParticleColor.a*color.a);
             // If color table says to not use values in this range discard
             if (color.a == 0) {
-                fragment_discard = 0.0;
+                // fragment_discard = 0.0;
             }
 
             // // Discard values outside of specified range
@@ -123,7 +126,7 @@ void main() {
 
             // If color table says to not use values in this range discard
             if (color.a == 0) {
-                fragment_discard = 0.0;
+                // fragment_discard = 0.0;
             }
 
             // // Discard values outside of specified range
