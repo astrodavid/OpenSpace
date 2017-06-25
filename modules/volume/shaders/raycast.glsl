@@ -34,7 +34,6 @@ uniform vec2 clipOffsets_#{id}[8];
 uniform float opacity_#{id} = 20.0;
 uniform float rNormalization_#{id} = 0.0;
 
-
 void sample#{id}(vec3 samplePos,
              vec3 dir,
              inout vec3 accumulatedColor,
