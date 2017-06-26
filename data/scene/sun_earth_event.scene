@@ -128,25 +128,85 @@ function postInitialization()
 
 
     ----------------------------- ARTIFICIAL BATSRUS, SINGLE TIMESTEP----------------------------------------
-    openspace.addVirtualProperty("BoolProperty",  "Artificial Bats",   "FL_BATSRUS_Artificial_Single*.renderable.enabled", false, nil, nil)
+    openspace.addVirtualProperty("BoolProperty",  "Single Bats",   "FL_BATSRUS_Artificial_Single*.renderable.enabled", false, nil, nil)
+    openspace.addVirtualProperty("BoolProperty",  "Single Bats OpenClosed",   "FL_BATSRUS_Artificial_SingleStepOpen*.renderable.enabled", false, nil, nil)
+    openspace.addVirtualProperty("BoolProperty",  "Single Bats FlowLines",   "FL_BATSRUS_Artificial_SingleStepFlow*.renderable.enabled", false, nil, nil)
+    -- openspace.addVirtualProperty("IntProperty",   "Artificial Bats ColorVar", "FL_BATSRUS_Artificial_SingleStepOpen*.renderable.DomainLimit.unitInterestRange", 0, 0, 3)
+
+        -- BATSRUS ARTIFICIAL
+    openspace.setPropertyValue("FL_BATSRUS_Artificial_SingleStepOpen*.renderable.DomainLimits.fieldlineDomainQuantity", 4)
+    openspace.setPropertyValue("FL_BATSRUS_Artificial_SingleStepOpen*.renderable.DomainLimits.unitInterestRange", {2.5, 3.0})
+    openspace.setPropertyValue("FL_BATSRUS_Artificial_SingleStepOpen*.renderable.Color.fieldlineColorQuantity", 4)
+
+    openspace.setPropertyValue("FL_BATSRUS_Artificial_SingleStepFlow*.renderable.Color.fieldlineColorQuantity", 3)
+    openspace.setPropertyValue("FL_BATSRUS_Artificial_SingleStepFlow*.renderable.showParticles", true)
+
+    -- particles
+    openspace.setPropertyValue("FL_BATSRUS_Artificial_SingleStep*.renderable.Particles.fieldlineParticleFrequency", 19)
+    openspace.setPropertyValue("FL_BATSRUS_Artificial_SingleStep*.renderable.Particles.fieldlineParticleSpeed", 18500000)
+
+    openspace.setPropertyValue("FL_BATSRUS_Artificial_SingleStepOpen*.renderable.Particles.fieldlineParticleSize", 25)
+    openspace.setPropertyValue("FL_BATSRUS_Artificial_SingleStepOpen*.renderable.Particles.fieldlineParticleColor", {1, 1, 0, 0.12})
+
+    openspace.setPropertyValue("FL_BATSRUS_Artificial_SingleStepFlow*.renderable.Particles.fieldlineParticleSize", 2)
+
+
+
+    openspace.addVirtualProperty("BoolProperty",  "Double Bats",   "FL_BATSRUS_Artificial_DT*.renderable.enabled", false, nil, nil)
+
+
+    ------ TODO ADD TEMPERATURE FOR OPENCLOSED For MODEL RUN... START AT 5.34 and end at 9.00, slower
+
+
+    openspace.setPropertyValue("FL_BATSRUS_Artificial_DT*.renderable.showParticles", true)
+    openspace.setPropertyValue("FL_BATSRUS_Artificial_DT*.renderable.DomainLimits.fieldlineDomainQuantity", 4)
+    openspace.setPropertyValue("FL_BATSRUS_Artificial_DT*.renderable.Color.fieldlineColorQuantity", 4)
+
+    openspace.setPropertyValue("FL_BATSRUS_Artificial_DTimeStep-throughout*.renderable.Particles.fieldlineParticleColor", {1, 1, 0, 1.0})
+    openspace.setPropertyValue("FL_BATSRUS_Artificial_DTimeStep-Open*.renderable.Particles.fieldlineParticleColor", {1, 1, 0, 0.5})
+
+    openspace.setPropertyValue("FL_BATSRUS_Artificial_DTimeStep-throughout*.renderable.Particles.fieldlineParticleFrequency", 9)
+    openspace.setPropertyValue("FL_BATSRUS_Artificial_DTimeStep-Open*.renderable.Particles.fieldlineParticleFrequency", 54)
+
+    openspace.setPropertyValue("FL_BATSRUS_Artificial_DTimeStep*.renderable.Particles.fieldlineParticleSize", 2)
+
+    openspace.setPropertyValue("FL_BATSRUS_Artificial_DTimeStep*.renderable.Particles.fieldlineParticleSpeed", 15000000)
+
+
+
+
+
+    ---------------------PFSS------------------------- particles
+    openspace.setPropertyValue("FL_PFSS.renderable.Particles.fieldlineParticleFrequency", 100)
+    openspace.setPropertyValue("FL_PFSS.renderable.Particles.fieldlineParticleSpeed", 30000000)
+    openspace.setPropertyValue("FL_PFSS.renderable.Particles.fieldlineParticleSize", 9)
+    openspace.setPropertyValue("FL_PFSS.renderable.Particles.fieldlineParticleColor", {1, 0.9, 1, 0.74})
+    -----------------------------------------------------------
+
+
+    -- openspace.setPropertyValue("FL_BATSRUS_Artificial_SingleStepFlow*.renderable.Particles.fieldlineParticleFrequency", 20)
+    -- openspace.setPropertyValue("FL_BATSRUS_Artificial_SingleStepFlow*.renderable.Particles.fieldlineParticleSize", 2)
+    -- openspace.setPropertyValue("FL_BATSRUS_Artificial_SingleStepFlow*.renderable.Particles.fieldlineParticleSpeed", 30000)
     -- openspace
     -- renderable.Particles.fieldlineParticleFrequency
     -- renderable.Particles.fieldlineParticleSize
     -- renderable.Particles.fieldlineParticleSpeed
     -- renderable.Particles.fieldlineParticleColor
     -- renderable.Particles.fieldlineFlipParticleDir
-    -- renderable.Particles.showParticles
-    -- renderable.Domain Limits.unitInterestRange
-    -- renderable.Domain Limits.fieldlineDomainQuantity
+    -- renderable.Particles.showParticlesf
+    -- renderable.DomainLimits.unitInterestRange
+    -- renderable.DomainLimits.fieldlineDomainQuantity
 
 
 
     ---------------------------------------------- BATSRUS ------------------------------------------------------
     openspace.addVirtualProperty("BoolProperty",  "BATSRSUS ALL",   "FL_BATSRUS_J12*.renderable.enabled", false, nil, nil)
+    openspace.addVirtualProperty("BoolProperty",  "Batsrus FlowlinesL",   "FL_BATSRUS_J12_Flo*.renderable.enabled", false, nil, nil)
+    openspace.addVirtualProperty("BoolProperty",  "Batsrus OpenClosed",   "FL_BATSRUS_J12_Ope*.renderable.enabled", false, nil, nil)
     openspace.setPropertyValue("FL_BATSRUS_J12_OpenClosed*.renderable.Color.fieldlineColorQuantity", 4) -- Topology
+    openspace.setPropertyValue("FL_BATSRUS_J12_OpenCl*.renderable.DomainLimits.unitInterestRange", {2.5, 3.0})
     -- openspace.setPropertyValue("FL_BATSRUS_J12_OpenClosed*.renderable.Color.fieldlineColorQuantity", 4) -- Topology
-    openspace.setPropertyValue("FL_BATSRUS_J12_FlowLines*.renderable.Color.fieldlineColorQuantity", 1) -- Density
-
+    openspace.setPropertyValue("FL_BATSRUS_J12_FlowLines*.renderable.Color.fieldlineColorQuantity", 3) -- Velocity
 
 
 
