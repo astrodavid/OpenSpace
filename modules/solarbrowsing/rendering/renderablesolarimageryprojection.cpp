@@ -68,7 +68,7 @@ RenderableSolarImageryProjection::RenderableSolarImageryProjection(
              // First section
              {3600,  {"2012-07-12T15:00:00.00", OsEng.timeManager().time().convertTime("2012-07-12T18:00:00.00")}},  // 1
              {3600,  {"2012-07-12T15:00:00.00", OsEng.timeManager().time().convertTime("2012-07-13T03:00:00.00")}},  // 2
-             {21600, {"2012-07-08T00:00:00.00", OsEng.timeManager().time().convertTime("2012-07-12T16:35:00.00")}}, // 3
+             {21600, {"2012-07-08T00:00:00.00", OsEng.timeManager().time().convertTime("2012-07-10T00:00:00.00")}}, // 3
              // Second section
              {7200,  {"2012-07-17T12:45:00.00", OsEng.timeManager().time().convertTime("2012-07-19T17:00:00.00")}}, // 4
              {21600, {"2012-07-17T06:00:00.00", OsEng.timeManager().time().convertTime("2012-07-19T17:00:00.00")}}, // 5
@@ -76,7 +76,7 @@ RenderableSolarImageryProjection::RenderableSolarImageryProjection(
              // Oskar loops start
              {43200, {"2012-07-01T00:00:00.00", OsEng.timeManager().time().convertTime("2012-07-12T00:00:00.00")}}, // 7
              {43200, {"2012-07-12T00:00:00.00", OsEng.timeManager().time().convertTime("2012-07-17T06:00:00.00")}}, // 8
-             {43200, {"2012-07-17T00:00:00.00", OsEng.timeManager().time().convertTime("2012-07-31T00:00:00.00")}}, // 9
+             {43200, {"2012-07-17T00:00:00.00", OsEng.timeManager().time().convertTime("2012-07-28T00:00:00.00")}}, // 9
              //{43200, {"2012-07-14T06:00:00.00", OsEng.timeManager().time().convertTime("2012-07-14T06:30:00.00")}}, // emil loop
             };
 
