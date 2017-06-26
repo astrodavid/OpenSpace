@@ -20,6 +20,7 @@ helper.setDeltaTimeKeys({
 
 -- Spacecraft imagery stuff
 openspace.bindKey("a", "openspace.setPropertyValue('Interaction.origin', 'Sun')", "Sets the focus of the camera to the Sun")
+openspace.bindKey("e", "openspace.setPropertyValue('Interaction.origin', 'Earth')", "Sets the focus of the camera to the Earth")
 openspace.bindKey("s", "openspace.setPropertyValue('Interaction.origin', 'SDO')", "Sets the focus of the camera to SDO")
 --openspace.bindKey("d", "openspace.setPropertyValue('Interaction.origin', 'Stereo A')", "Sets the focus of the camera to Stereo A")
 --openspace.bindKey("f", "openspace.setPropertyValue('Interaction.origin', 'SOHO')", "Sets the focus of the camera to SOHO")
@@ -29,6 +30,41 @@ openspace.bindKey("h", "openspace.time.setDeltaTime(1500)", "Set delta time to 1
 openspace.bindKey("j", "openspace.time.setTime('2012 JUL 01 00:00:00.000')", "Sets time to 2012 07 01 00:00:00.000")
 openspace.bindKey("k", "openspace.time.setTime('2012 JUL 04 00:00:00.000')", "Sets time to 2012 07 04 00:00:00.000")
 openspace.bindKey("l", "openspace.time.setTime('2012 JUL 12 19:10:15.000')", "Sets time to 2012 07 12 19:10:15.000")
+
+
+-- openspace.bindKey("x",
+--     "openspace.setPropertyValue("FL_BATSRUS_Artificial_SingleStep*.renderable.showParticles", true)"
+--     helper.property.invert('FL_BATSRUS_Artificial_SingleStepOpenClosed.renderable.'),
+--     ""
+-- )
+
+
+
+
+-- TODO : MOON AND GEOSYNCHRONIZE TOGGLES!
+-- TODO : ADD TIME STEP JAN-2000-01 04.00 and JAN-2000-01 06.57
+-- TODO Everything colored by topology
+-- TODO : SET PARTICLES AND COLORS CORRECTLY
+-- OPENCLOSED COLOR ALPHA 0.18, PARTICLE ALPHA 0.5
+-- OPENCLOSED PARTICLE FREQUENCY 31
+-- OPENCLOSED PARTICLE SIZE 2
+-- OPENCLOSED PARTICLE SPEED 15000000
+-- THROUGHOUT PARTICLE FREQUENCY 31
+-- THROUGHOUT PARTICLE SIZE 2
+-- THROUGHOUTS COLOR ALPHA 0.33, PARTICLE ALPHA 1.0
+-- PARTICLE SPEED = 15000000
+-- DELTA TIME 0.001
+
+
+
+
+
+openspace.bindKey("z", "openspace.time.setDeltaTime(0.001)", "Sets delta time to 0.001")
+openspace.bindKey("x", "openspace.time.setTime('2011 JAN 01 00:00:00.000')", "Sets time to 2011 01 12 00:00:00.000")
+openspace.bindKey("c", "openspace.time.setTime('2000 JAN 01 04:00:00.000')", "Sets time to 2000 01 01 04:00:00.000")
+openspace.bindKey("v", "openspace.time.setTime('2000 JAN 01 06:57:00.000')", "Sets time to 2000 01 01 06:57:00.000")
+openspace.bindKey("b", "openspace.time.setTime('2012 JUL 14 06:00:00.000')", "Sets time to 2012 07 14 06:00:00.000")
+
 
 -- openspace.bindKey("Ctrl+d",
 --     "openspace.setPropertyValue('SolarImagery_Stereo_StereoA_Image_EUV.renderable.currentActiveInstrumentProperty', 'SECCHI_EUVI_195');" ..
@@ -255,4 +291,20 @@ openspace.bindKey("Ctrl+9",
 openspace.bindKey("Shift+g",
     "openspace.setPropertyValue('Sun_Projection.renderable.activateLooping', false);",
     "Stop Looping"
+)
+
+-- Toggle Additive Blending for ALL field lines
+openspace.bindKey("Shift+a",
+    helper.property.invert('FL_PFSS.renderable.additiveBlending') ..
+    helper.property.invert('FL_BATSRUS_J12_OpenClosed.renderable.additiveBlending') ..
+    helper.property.invert('FL_BATSRUS_J12_FlowLines.renderable.additiveBlending') ..
+    helper.property.invert('FL_BATSRUS_Artificial_SingleStepFlowLines.renderable.additiveBlending') ..
+    helper.property.invert('FL_BATSRUS_Artificial_SingleStepOpenClosed.renderable.additiveBlending') ..
+    helper.property.invert('FL_ENLIL_slice_eqPlane_011AU_1.renderable.additiveBlending') ..
+    helper.property.invert('FL_ENLIL_slice_eqPlane_011AU_2.renderable.additiveBlending') ..
+    helper.property.invert('FL_ENLIL_slice_lat4_011AU_1.renderable.additiveBlending') ..
+    helper.property.invert('FL_ENLIL_slice_lat4_011AU_2.renderable.additiveBlending') ..
+    helper.property.invert('FL_ENLIL_earth.renderable.additiveBlending') ..
+    helper.property.invert('FL_ENLIL_stereoa.renderable.additiveBlending'),
+    "Toggle Additive Blending"
 )
