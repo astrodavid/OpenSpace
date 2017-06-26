@@ -51,7 +51,7 @@ function postInitialization()
     openspace.setPropertyValue("FL_ENLIL*.renderable.Color.transferFunctionPath", 'X:/CCMC/fieldlinesdata/colortables/kroyw.txt')
     openspace.setPropertyValue("FL_ENLIL*.renderable.Color.transferFunctionLimit1", '150')
     openspace.setPropertyValue("FL_ENLIL*.renderable.Color.transferFunctionLimit2", '1050')
-    openspace.setPropertyValue("FL_ENLIL*.renderable.enabled", false)
+    openspace.setPropertyValue("FL*.renderable.enabled", false)
 
     -- PFSS
     openspace.setPropertyValue("FL_PFSS.renderable.Color.fieldlineColorMethod", 0)
@@ -114,6 +114,46 @@ function postInitialization()
     -- ========================================================== SOLARBROWSING END ==================================================
     -- =================================================================================================================================
     -- =================================================================================================================================
+
+    -- FIELD LINE VIRTUAL PROPERTIES
+    ------------------------------ ENLIL ---------------------------
+    openspace.addVirtualProperty("BoolProperty",  "ENLIL ALL",   "FL_ENLIL*.renderable.enabled", false, nil, nil)
+    openspace.addVirtualProperty("BoolProperty",  "ENLIL SLICES",   "FL_ENLIL_slice*.renderable.enabled", false, nil, nil)
+    openspace.addVirtualProperty("BoolProperty",  "ENLIL LAT4",   "FL_ENLIL_slice_lat*.renderable.enabled", false, nil, nil)
+    openspace.addVirtualProperty("BoolProperty",  "ENLIL EQ_PLANE",   "FL_ENLIL_slice_eq*.renderable.enabled", false, nil, nil)
+    openspace.addVirtualProperty("BoolProperty",  "ENLIL EARTH",   "FL_ENLIL_earth*.renderable.enabled", false, nil, nil)
+    openspace.addVirtualProperty("BoolProperty",  "ENLIL STEREOA",   "FL_ENLIL_stereoa*.renderable.enabled", false, nil, nil)
+    --- SET COLOR METHOD ON ENLIL SLICES AND STEREOA/EARTH LINES
+
+
+    ----------------------------- ARTIFICIAL BATSRUS, SINGLE TIMESTEP----------------------------------------
+    openspace.addVirtualProperty("BoolProperty",  "Artificial Bats",   "FL_BATSRUS_Artificial_Single*.renderable.enabled", false, nil, nil)
+    -- openspace
+    -- renderable.Particles.fieldlineParticleFrequency
+    -- renderable.Particles.fieldlineParticleSize
+    -- renderable.Particles.fieldlineParticleSpeed
+    -- renderable.Particles.fieldlineParticleColor
+    -- renderable.Particles.fieldlineFlipParticleDir
+    -- renderable.Particles.showParticles
+    -- renderable.Domain Limits.unitInterestRange
+    -- renderable.Domain Limits.fieldlineDomainQuantity
+
+
+
+    ---------------------------------------------- BATSRUS ------------------------------------------------------
+    openspace.addVirtualProperty("BoolProperty",  "BATSRSUS ALL",   "FL_BATSRUS_J12*.renderable.enabled", false, nil, nil)
+    openspace.setPropertyValue("FL_BATSRUS_J12_OpenClosed*.renderable.Color.fieldlineColorQuantity", 4) -- Topology
+    -- openspace.setPropertyValue("FL_BATSRUS_J12_OpenClosed*.renderable.Color.fieldlineColorQuantity", 4) -- Topology
+    openspace.setPropertyValue("FL_BATSRUS_J12_FlowLines*.renderable.Color.fieldlineColorQuantity", 1) -- Density
+
+
+
+
+
+
+
+
+
     openspace.resetCameraDirection()
 
     openspace.printInfo("Done setting default values")
