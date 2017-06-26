@@ -175,7 +175,7 @@ openspace.bindKey("Shift+p",
 )
 
 openspace.bindKey("Ctrl+e",
-    helper.renderable.toggle('SolarImagery_EarthMarker_Marker') ..
+    helper.renderable.toggle('SolarImagery_EarthMarker_Marker'),
     --helper.renderable.toggle('SolarImagery_SDO_Marker'),
     "Toggle Earth Marker"
 )
