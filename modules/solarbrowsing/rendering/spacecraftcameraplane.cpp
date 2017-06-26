@@ -178,7 +178,7 @@ void SpacecraftCameraPlane::render(
       TransferFunction* lut, const glm::dvec3& sunPositionWorld,
       const float& planeOpacity, const float& contrastValue, const float& gammaValue,
       const bool& enableBorder, const bool& enableFrustum,
-      const glm::vec2& currentCenterPixel, const float& currentScale, const float& multipleImageryOffset)
+      const glm::vec2& currentCenterPixel, const float& currentScale, const float& multipleImageryOffset, const bool& isCoronaGraph)
 {
     glEnable(GL_CULL_FACE);
 
@@ -227,6 +227,7 @@ void SpacecraftCameraPlane::render(
     _planeShader->setUniform("contrastValue", contrastValue);
     _planeShader->setUniform("modelViewProjectionTransform",
                              projectionMatrix * glm::mat4(modelViewTransform));
+    _planeShader->setUniform("isCoronaGraph", isCoronaGraph);
 
     //_tfMap[_currentActiveInstrument]->bind(); // Calls update internally
     ghoul::opengl::TextureUnit tfUnit;
