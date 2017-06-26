@@ -141,9 +141,9 @@ RenderableFieldlinesSequence::RenderableFieldlinesSequence(const ghoul::Dictiona
       _colorizingQuantity("fieldlineColorQuantity", "Quantity", properties::OptionProperty::DisplayType::Dropdown),
       _domainQuantity("fieldlineDomainQuantity", "Quantity", properties::OptionProperty::DisplayType::Dropdown),
       _colorGroup("Color"),
-      _domainGroup("Domain Limits"),
+      _domainGroup("DomainLimits"),
       _particleGroup("Particles"),
-      _seedGroup("Seed Points"),
+      _seedGroup("SeedPoints"),
       _transferFunctionPath("transferFunctionPath", "Transfer Function Path"),
       _transferFunctionMinVal("transferFunctionLimit1", "TF minimum", "0"),
       _transferFunctionMaxVal("transferFunctionLimit2", "TF maximum", "1"),
@@ -985,13 +985,13 @@ bool RenderableFieldlinesSequence::initialize() {
     _domainGroup.addProperty(_domainLimY);
     _domainGroup.addProperty(_domainLimZ);
 
+    addProperty(_showParticles);
     addPropertySubOwner(_particleGroup);
     _particleGroup.addProperty(_flipParticleDirection);
     _particleGroup.addProperty(_fieldlineParticleColor);
     _particleGroup.addProperty(_fieldlineParticleSize);
     _particleGroup.addProperty(_modulusDivider);
     _particleGroup.addProperty(_timeMultiplier);
-    _particleGroup.addProperty(_showParticles);
 
     if (allowSeedPoints) {
         addPropertySubOwner(_seedGroup);
