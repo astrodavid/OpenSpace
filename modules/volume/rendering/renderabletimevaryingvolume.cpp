@@ -52,7 +52,6 @@ namespace {
     const char* KeyStepSize = "StepSize";
     const char* KeyTransferFunction = "TransferFunction";
     const char* KeySourceDirectory = "SourceDirectory";
-    const char* KeyVariable = "Variable";
     const char* KeyLowerDomainBound = "LowerDomainBound";
     const char* KeyUpperDomainBound = "UpperDomainBound";
     const char* KeyLowerValueBound = "LowerValueBound";
@@ -60,9 +59,7 @@ namespace {
     const char* KeyClipPlanes = "ClipPlanes";
     const char* KeySecondsBefore = "SecondsBefore";
     const char* KeySecondsAfter = "SecondsAfter";
-    const char* KeyCache = "Cache";
     const char* KeyGridType = "GridType";
-    const char* ValueSphericalGridType = "Spherical";
     const char* KeyMinValue = "MinValue";
     const char* KeyMaxValue = "MaxValue";
     const char* KeyTime = "Time";
@@ -84,6 +81,10 @@ RenderableTimeVaryingVolume::RenderableTimeVaryingVolume(const ghoul::Dictionary
     , _triggerTimeJump("triggerTimeJump", "Jump")
     , _jumpToTimestep("jumpToTimestep", "Jump to timestep", 0, 0, 256)
     , _currentTimestep("currentTimestep", "Current timestep", 0, 0, 256)
+    , _opacity("opacity", "Opacity", 20.0f, 0.0f, 50.0f)
+    , _rNormalization("rNormalization", "Radius normalization", 0.0f, 0.0f, 2.0f)
+    , _lowerValueBound("lowerValueBound", "Lower value bound", 0.0f, 0.0f, 1000000.0f)
+    , _upperValueBound("upperValueBound", "Upper value bound", 0.0f, 0.0f, 1000000.0f)
     , _raycaster(nullptr)
     , _transferFunction(nullptr)
 {
@@ -207,6 +208,10 @@ bool RenderableTimeVaryingVolume::initialize() {
     addProperty(_triggerTimeJump);
     addProperty(_jumpToTimestep);
     addProperty(_currentTimestep);
+    addProperty(_opacity);
+    addProperty(_rNormalization);
+    addProperty(_lowerValueBound);
+    addProperty(_upperValueBound);
 
     _raycaster->setGridType((_gridType.value() == 1) ? VolumeGridType::Spherical : VolumeGridType::Cartesian);
     _gridType.onChange([this] {
@@ -307,18 +312,37 @@ void RenderableTimeVaryingVolume::update(const UpdateData& data) {
         Timestep* t = currentTimestep();
         _currentTimestep = timestepIndex(t);
         if (t && t->texture) {
-            glm::dvec3 scale = t->upperDomainBound - t->lowerDomainBound;
-            glm::dvec3 translation = (t->lowerDomainBound + t->upperDomainBound) * 0.5f;
+            if (_raycaster->gridType() == volume::VolumeGridType::Cartesian) {
+                glm::dvec3 scale = t->upperDomainBound - t->lowerDomainBound;
+                glm::dvec3 translation = (t->lowerDomainBound + t->upperDomainBound) * 0.5f;
 
-            glm::dmat4 modelTransform = glm::translate(glm::dmat4(1.0), translation);
-            glm::dmat4 scaleMatrix = glm::scale(glm::dmat4(1.0), scale);
-            modelTransform = modelTransform * scaleMatrix;
-            _raycaster->setModelTransform(glm::mat4(modelTransform));
+                glm::dmat4 modelTransform = glm::translate(glm::dmat4(1.0), translation);
+                glm::dmat4 scaleMatrix = glm::scale(glm::dmat4(1.0), scale);
+                modelTransform = modelTransform * scaleMatrix;
+                _raycaster->setModelTransform(glm::mat4(modelTransform));
+            } else {
+                _raycaster->setModelTransform(
+                    glm::scale(
+                        glm::dmat4(1.0),
+                        glm::dvec3(t->upperDomainBound[0])
+                    )
+                );
+            }
             _raycaster->setVolumeTexture(t->texture);
+
+            // Remap volume value to that TF value 0 is sampled for lowerValueBound, and 1 is sampled for upperLowerBound.
+            // This means that volume values = 0 need to be remapped to how localMin relates to the global range.
+            float zeroMap = (t->minValue - _lowerValueBound) / (_upperValueBound - _lowerValueBound);
+
+            // Volume values = 1 are mapped to how localMax relates to the global range.
+            float oneMap = (t->maxValue - _lowerValueBound) / (_upperValueBound - _lowerValueBound);
+            _raycaster->setValueRemapping(zeroMap, oneMap);
         } else {
             _raycaster->setVolumeTexture(nullptr);
         }
         _raycaster->setStepSize(_stepSize);
+        _raycaster->setOpacity(_opacity);
+        _raycaster->setRNormalization(_rNormalization);
     }
 }
 

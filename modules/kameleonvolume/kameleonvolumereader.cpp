@@ -85,7 +85,34 @@ std::unique_ptr<volume::RawVolume<float>> KameleonVolumeReader::readFloatVolume(
     const glm::vec3 dims = volume->dimensions();
     const glm::vec3 diff = upperBound - lowerBound;
 
-    _model->loadVariable(variable);
+    std::function<float(const std::string&, glm::ivec3)> interpolate =
+        [this](const std::string& variable, glm::ivec3 volumeCoords) {
+            return _kameleonInterpolator->interpolate(
+                variable,
+                static_cast<float>(volumeCoords[0]),
+                static_cast<float>(volumeCoords[1]),
+                static_cast<float>(volumeCoords[2]));
+        };
+
+    std::function<float(glm::ivec3)> sample = [this, &variable, &interpolate](glm::ivec3 volumeCoords) {
+        return interpolate(variable, volumeCoords);
+    };
+
+    // TODO: Handle more cases like subtraction etc, or better: parse expression and automaticly evaluate expression.
+    int indexOfDivision = variable.find('/');
+    if (indexOfDivision == -1) {
+        _model->loadVariable(variable);
+    } else {
+        std::string numerator = variable.substr(0, indexOfDivision);
+        std::string denominator = variable.substr(indexOfDivision + 1);
+
+        sample = [this, &numerator, &denominator, &interpolate] (glm::ivec3 volumeCoords) {
+            return interpolate(numerator, volumeCoords) /
+                interpolate(denominator, volumeCoords);
+        };
+        _model->loadVariable(numerator);
+        _model->loadVariable(denominator);
+    }
 
     float* data = volume->data();
     for (size_t index = 0; index < volume->nCells(); index++) {
@@ -93,11 +120,7 @@ std::unique_ptr<volume::RawVolume<float>> KameleonVolumeReader::readFloatVolume(
         glm::vec3 coordsZeroToOne = coords / dims;
         glm::vec3 volumeCoords = lowerBound + diff * coordsZeroToOne;
 
-        data[index] = _interpolator->interpolate(
-            variable,
-            static_cast<float>(volumeCoords[0]),
-            static_cast<float>(volumeCoords[1]),
-            static_cast<float>(volumeCoords[2]));
+        data[index] = sample(volumeCoords);
 
         if (data[index] < newMinValue) {
             newMinValue = data[index];
@@ -287,7 +310,53 @@ ghoul::Dictionary KameleonVolumeReader::readMetaData() const {
 }
 
 std::string KameleonVolumeReader::simulationStart() const {
-    return _model->getGlobalAttribute("start_time").getAttributeString();
+    std::string startTime;
+    if (_model->doesAttributeExist("start_time")){
+        startTime =
+            _model->getGlobalAttribute("start_time").getAttributeString();
+    } else if (_model->doesAttributeExist("tim_rundate_cal")) {
+        startTime =
+            _model->getGlobalAttribute("tim_rundate_cal").getAttributeString();
+        size_t numChars = startTime.length();
+        if (numChars < 19) {
+            // Fall through to add the required characters
+            switch (numChars) {
+                case 10 : // YYYY-MM-DD        => YYYY-MM-DDTHH
+                    startTime += "T00";
+                case 13 : // YYYY-MM-DDTHH     => YYYY-MM-DDTHH:
+                    startTime += ":";
+                case 14 : // YYYY-MM-DDTHH:    => YYYY-MM-DDTHH:MM
+                    startTime += "00";
+                case 16 : // YYYY-MM-DDTHH:MM  => YYYY-MM-DDTHH:MM:
+                    startTime += ":";
+                case 17 : // YYYY-MM-DDTHH:MM: => YYYY-MM-DDTHH:MM:SS
+                    startTime += "00";
+                default :
+                    break;
+            }
+        }
+    } else if (_model->doesAttributeExist("tim_obsdate_cal")) {
+        startTime =
+            _model->getGlobalAttribute("tim_obsdate_cal").getAttributeString();
+    } else if (_model->doesAttributeExist("tim_crstart_cal")) {
+        startTime =
+            _model->getGlobalAttribute("tim_crstart_cal").getAttributeString();
+    }
+
+    if (startTime.length() == 19){
+        startTime += ".000Z";
+    }
+
+    return startTime;
+}
+
+float KameleonVolumeReader::elapsedTime() const {
+    if (_model->doesAttributeExist("elapsed_time_in_seconds")) {
+        return _model->getGlobalAttribute("elapsed_time_in_seconds").getAttributeFloat();
+    } else if (_model->doesAttributeExist("time_physical_time")) {
+        return _model->getGlobalAttribute("time_physical_time").getAttributeFloat();
+    }
+    return 0;
 }
 
 std::string KameleonVolumeReader::simulationEnd() const {
@@ -296,9 +365,9 @@ std::string KameleonVolumeReader::simulationEnd() const {
 
 std::string KameleonVolumeReader::time() const {
     double start =
-        ccmc::Time(_model->getGlobalAttribute("start_time").getAttributeString()).getEpoch();
+        ccmc::Time(simulationStart()).getEpoch();
     // Get elapsed time in seconds and convert to milliseconds.
-    double elapsed = _model->getGlobalAttribute("elapsed_time_in_seconds").getAttributeFloat() * 1000;
+    double elapsed = elapsedTime() * 1000;
     return ccmc::Time(start + elapsed).toString();
 }
 
