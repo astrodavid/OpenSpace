@@ -6,7 +6,7 @@ helper.property = {}
 
 -- These helpers are for scheduling lua scripts
 -- See class ScriptScheduler and ScheduledScript for reference
-helper.scheduledScript = {} 
+helper.scheduledScript = {}
 helper.scheduledScript.reversible = {}
 
 -- Function that sets the most common key bindings that are common to most (all?)
@@ -124,10 +124,10 @@ helper.renderable.setEnabled = function(renderable, enabled)
     return "openspace.setPropertyValue('" .. renderable .. ".renderable.enabled', " .. (enabled and "true" or "false") .. ");";
 end
 
--- Function that returns a lua table specifying a reversible ScheduledScript for 
+-- Function that returns a lua table specifying a reversible ScheduledScript for
 -- setting the enabled property of <renderable> to <enabled> at time <time>.
 helper.scheduledScript.reversible.setEnabled = function(time, renderable, enabled)
-    return 
+    return
     {
         Time = time,
         ForwardScript = helper.renderable.setEnabled(renderable, enabled),
@@ -136,7 +136,7 @@ helper.scheduledScript.reversible.setEnabled = function(time, renderable, enable
 end
 
 helper.scheduledScript.setEnabled = function(time, renderable, enabled)
-    return 
+    return
     {
         Time = time,
         ForwardScript = helper.renderable.setEnabled(renderable, enabled)

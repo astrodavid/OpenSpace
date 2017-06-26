@@ -55,6 +55,7 @@ using namespace ghoul::opengl;
 using namespace std::chrono;
 
 typedef std::chrono::high_resolution_clock Clock;
+typedef std::chrono::milliseconds Milliseconds;
 
 namespace {
     static const std::string _loggerCat = "RenderableSolarImagery";
@@ -77,7 +78,7 @@ RenderableSolarImagery::RenderableSolarImagery(const ghoul::Dictionary& dictiona
     , _bufferSize("bufferSize", "Buffer Size", 5, 1, 150)
     , _displayTimers("displayTimers", "Display Timers", false)
     , _lazyBuffering("lazyBuffering", "Lazy Buffering", true)
-    , _minRealTimeUpdateInterval("minRealTimeUpdateInterval", "Min Update Interval", 65, 0, 300)
+    , _minRealTimeUpdateInterval("minRealTimeUpdateInterval", "Min Update Interval", 65, 0, 1000)
     , _moveFactor("moveFactor", "Move Factor" , 1.0, 0.0, 1.0)
     , _resolutionLevel("resolutionlevel", "Level of detail", 3, 0, 5)
     , _useBuffering("useBuffering", "Use Buffering", true)
@@ -544,6 +545,8 @@ bool RenderableSolarImagery::deinitialize() {
 }
 
 void RenderableSolarImagery::uploadImageDataToPBO() {
+
+    //auto t1 = Clock::now();
     _pbo->activate();
     IMG_PRECISION* _pboBufferData = _pbo->mapToClientMemory<IMG_PRECISION>(/*shouldOrphanData=*/true);
 
@@ -561,7 +564,21 @@ void RenderableSolarImagery::uploadImageDataToPBO() {
         //         break;
         //     }
         // }
+
+
+
+        //auto t1 = Clock::now();
+            //std::memcpy(_pboBufferData, _solarImageData->data, _imageSize * _imageSize * sizeof(unsigned char));
         std::shared_ptr<SolarImageData> _solarImageData = _streamBuffer.popFinishedJob();
+
+        //auto t2 = Clock::now();
+
+        // if (_displayTimers) {
+        //     LDEBUG("pop time time "
+        //            << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+        //                     .count()
+        //            << " ms" << std::endl);
+        // }
 
         if (_solarImageData) {
             _currentActiveImageTime = _solarImageData->timeObserved;
@@ -569,16 +586,20 @@ void RenderableSolarImagery::uploadImageDataToPBO() {
             _currentCenterPixel = _solarImageData->im->centerPixel;
             _isCoronaGraph = _solarImageData->im->isCoronaGraph;
 
-            auto t1 = Clock::now();
-            std::memcpy(_pboBufferData, _solarImageData->data, _imageSize * _imageSize * sizeof(unsigned char));
-            auto t2 = Clock::now();
 
-            if (_displayTimers) {
-                LDEBUG("Memcpy time "
-                       << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
-                                .count()
-                       << " ms" << std::endl);
-            }
+            //auto t1 = Clock::now();
+            std::memcpy(_pboBufferData, _solarImageData->data, _imageSize * _imageSize * sizeof(unsigned char));
+            //auto t2 = Clock::now();
+
+
+
+
+            // if (_displayTimers) {
+            //     LDEBUG("Memcpy time "
+            //            << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            //                     .count()
+            //            << " ms" << std::endl);
+            // }
 
             _initializePBO = false;
             _pboIsDirty = true;
@@ -596,9 +617,24 @@ void RenderableSolarImagery::uploadImageDataToPBO() {
     }
     _pbo->releaseMappedBuffer();
     _pbo->deactivate();
+
+
+    // auto t2 = Clock::now();
+
+    // if (std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1) > Milliseconds(0)) {
+    //     LWARNING("warning memcpy slow "
+    //            << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+    //                     .count()
+    //            << " ms" << std::endl);
+    // }
+
 }
 
 void RenderableSolarImagery::updateTextureGPU(bool asyncUpload, bool resChanged) {
+
+   // auto t1 = Clock::now();
+
+
     if (_usePBO && asyncUpload) {
         _pbo->activate();
         _texture->bind();
@@ -630,6 +666,14 @@ void RenderableSolarImagery::updateTextureGPU(bool asyncUpload, bool resChanged)
        // }
         delete[] data;
     }
+     // auto t2 = Clock::now();
+
+     //    if (std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1) > Milliseconds(0)) {
+     //        LWARNING("warning UPLOAD GPU slow "
+     //               << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+     //                        .count()
+     //               << " ms" << std::endl);
+     //    }
 }
 
 void RenderableSolarImagery::decode(unsigned char* buffer, const std::string& filename)
@@ -641,11 +685,16 @@ void RenderableSolarImagery::decode(unsigned char* buffer, const std::string& fi
 }
 
 void RenderableSolarImagery::performImageTimestep(const double& osTime) {
+
+
     if (_pboIsDirty || !_usePBO) {
         updateTextureGPU();
     }
 
+            //std::memcpy(_pboBufferData, _solarImageData->data, _imageSize * _imageSize * sizeof(unsigned char));
     bool stateChanged = _imageMetadataMap2[_currentActiveInstrument].hasStateChanged(osTime);
+
+
     // Time to pop from buffer !!! - And refill with buffer offset
     if (stateChanged || _initializePBO) {
         // Refill PBO
@@ -656,6 +705,8 @@ void RenderableSolarImagery::performImageTimestep(const double& osTime) {
             uploadImageDataToPBO();
         }
     }
+
+
 }
 
 bool RenderableSolarImagery::checkBoundaries(const RenderData& data) {
@@ -664,7 +715,9 @@ bool RenderableSolarImagery::checkBoundaries(const RenderData& data) {
     const glm::dvec3& planePosition = _spacecraftCameraPlane->worldPosition();
 
     const glm::dvec3 toCamera = glm::normalize(cameraPosition - planePosition);
-    if (glm::dot(toCamera, normal) < 0) {
+
+    // This is wrong when camera is facing the other way
+    if (/*glm::dot(toCamera, normal)*/ glm::dot(normal, data.camera.viewDirectionWorldSpace()) > 0 /*&& glm::dot(data.camera.viewDirectionWorldSpace(), normal) < 0*/) {
         return false;
     }
     return true;
@@ -695,16 +748,22 @@ void RenderableSolarImagery::update(const UpdateData& data) {
         _deltaTimeLast = dt;
     }
 
-    // LDEBUG("_stream" << _streamBuffer.numJobs());
-    // LDEBUG("buffersize" << _bufferSize);
-    if (_streamBuffer.numJobs() < _bufferSize && (_isWithinFrustum || _initializePBO)) {
+    //auto t1 = Clock::now();
+
+    if ((_isWithinFrustum || _initializePBO) && _streamBuffer.numJobs() < _bufferSize) {
         // Always add to buffer faster than pop ..
+
+
         const double& osTime = OsEng.timeManager().time().j2000Seconds();
         // The min real time update interval doesnt make any sense
         DecodeData decodeData = getDecodeDataFromOsTime(osTime + (_bufferCountOffset /** _streamBuffer.numJobs()*/) * (OsEng.timeManager().time().deltaTime() * static_cast<double>(_minRealTimeUpdateInterval)/1000.0));
         //LDEBUG("Current active time " << SpiceManager::ref().dateFromEphemerisTime(_currentActiveImageTime));
         //LDEBUG("dt" << (_streamBuffer.numJobs()) * (OsEng.timeManager().time().deltaTime()));
         const std::string hash = decodeData.im->filename + std::to_string(_imageSize);
+
+
+
+
 
         //LDEBUG("hASH?? " << hash);
 
@@ -714,13 +773,30 @@ void RenderableSolarImagery::update(const UpdateData& data) {
             //LINFO("Pushing hash  " << hash);
             //LINFO("Pushing delta time  " << SpiceManager::ref().dateFromEphemerisTime(decodeData.timeObserved));
             auto job = std::make_shared<DecodeJob>(decodeData, decodeData.im->filename + std::to_string(_imageSize));
+
+//auto t1 = Clock::now();
             _streamBuffer.enqueueJob(job);
+
+
+
+            //  auto t2 = Clock::now();
+            //  if (std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1) > Milliseconds(0)) {
+            //     LWARNING("warning update slow "
+            //            << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            //                     .count()
+            //            << " ms" << std::endl);
+            // }
+
             //_bufferCountOffset = 0;
         } else {
            // LDEBUG("has job increasing counter");
             _bufferCountOffset++;
         }
+
+
+
     }
+
 
     _timeToUpdateTexture = _realTimeDiff > _minRealTimeUpdateInterval;
 
@@ -740,14 +816,35 @@ void RenderableSolarImagery::render(const RenderData& data) {
     //     _shouldRenderPlane = true;
     // }
 
+    //std::memcpy(_pboBufferData, _solarImageData->data, _imageSize * _imageSize * sizeof(unsigned char));
+    //std::memcpy(_pboBufferData, _solarImageData->data, _imageSize * _imageSize * sizeof(unsigned char));
+
      _isWithinFrustum = checkBoundaries(data);
+     // if (_isWithinFrustum) {
+     //    LDEBUG("_iswithin frustum" <<  _name << " : " <<_isWithinFrustum);
+     // }
+
     if (_isWithinFrustumLast != _isWithinFrustum) {
         //_pboIsDirty = false;
         //fillBuffer(OsEng.timeManager().time().j2000Seconds());
         // _currentActiveImageTime
         //               = getDecodeDataFromOsTime(OsEng.timeManager().time().j2000Seconds())
         //                       .timeObserved;
+
+        //auto t1 = Clock::now();
+
         clearBuffer();
+
+
+        //  auto t2 = Clock::now();
+
+        // if (std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1) > Milliseconds(0)) {
+        //     LWARNING("warning memcpy slow "
+        //            << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+        //                     .count()
+        //            << " ms" << std::endl);
+        // }
+
         // _streamBuffer.clear();
         // _bufferCountOffset = 1;
         // _frameSkipCount = 0;
@@ -776,6 +873,7 @@ void RenderableSolarImagery::render(const RenderData& data) {
     _spacecraftCameraPlane->render(data, *_texture, _lut, sunPositionWorld, _planeOpacity,
                                    _contrastValue, _gammaValue, _enableBorder,
                                    _enableFrustum, _currentCenterPixel, _currentScale, _offset);
+
 }
 
 } // namespace openspace

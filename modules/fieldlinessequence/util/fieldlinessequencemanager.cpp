@@ -324,12 +324,8 @@ bool FieldlinesSequenceManager::getFieldlinesStateFromBinary(
 
     switch (binFileVersion) {
         case 0 : {
-<<<<<<< HEAD
-                //LDEBUG("BINARY FILE - VERSION 0");
-=======
                 // LDEBUG("BINARY FILE - VERSION 0");
                 // No need to put everything in this scope now, as only version 0 exists!
->>>>>>> origin/feature/interactivefieldlines
             }
             break;
         default : {

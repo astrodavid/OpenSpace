@@ -6,7 +6,7 @@ function preInitialization()
     critical objects.
     ]]--
 
-    openspace.spice.loadKernel("${SPICE}/naif0011.tls")
+    openspace.spice.loadKernel("${SPICE}/naif0012.tls")
     openspace.spice.loadKernel("${SPICE}/pck00010.tpc")
 
   --  openspace.time.setTime(openspace.time.currentWallTime())
@@ -46,6 +46,20 @@ function postInitialization()
     openspace.setPropertyValue('SolarImagery_*_Image*.renderable.planeOpacity', 0)
     -- Set plane opacity to 0
 
+    -- DEFAULT ENLIL
+    openspace.setPropertyValue("FL_ENLIL*.renderable.Color.fieldlineColorQuantity", 1)
+    openspace.setPropertyValue("FL_ENLIL*.renderable.Color.transferFunctionPath", 'X:/CCMC/fieldlinesdata/colortables/kroyw.txt')
+    openspace.setPropertyValue("FL_ENLIL*.renderable.Color.transferFunctionLimit1", '150')
+    openspace.setPropertyValue("FL_ENLIL*.renderable.Color.transferFunctionLimit2", '1050')
+    openspace.setPropertyValue("FL_ENLIL*.renderable.enabled", false)
+
+    -- PFSS
+    openspace.setPropertyValue("FL_PFSS.renderable.Color.fieldlineColorMethod", 0)
+    openspace.setPropertyValue("FL_PFSS.renderable.enabled", false)
+
+    -- GDAL
+    --openspace.setPropertyValueSingle('Global Properties.GlobeBrowsing.GdalWrapper.logGdalErrors', false);
+
     -- Loops
     openspace.addVirtualProperty("BoolProperty", "Activate Looping", "Sun_Projection.renderable.activateLooping", false, nil, nil)
     openspace.addVirtualProperty("IntProperty",  "Loop Id", "Sun_Projection.renderable.loopId", 0, 0, 9)
@@ -58,7 +72,7 @@ function postInitialization()
     openspace.addVirtualProperty("FloatProperty", "Plane Opacity", "SolarImagery*.renderable.planeOpacity", 1.0, 0.0, 1.0)
     openspace.addVirtualProperty("BoolProperty",  "Verbose All Planes", "SolarImagery*.renderable.verboseMode", false, nil, nil)
     openspace.addVirtualProperty("FloatProperty", "Move Factor", "SolarImagery*.renderable.moveFactor", 0.9, 0.0, 1.0)
-    openspace.addVirtualProperty("IntProperty",   "Update Interval", "SolarImagery*.renderable.minRealTimeUpdateInterval", 65, 0, 300)
+    openspace.addVirtualProperty("IntProperty",   "Update Interval", "SolarImagery*.renderable.minRealTimeUpdateInterval", 65, 0, 1000)
 
        -- ===================================================== STEREO A & B ============================================================
     -- Stereo Orbits
@@ -100,17 +114,13 @@ function postInitialization()
     -- ========================================================== SOLARBROWSING END ==================================================
     -- =================================================================================================================================
     -- =================================================================================================================================
-
-    -- PFSS
-    openspace.setPropertyValue('FL_PFSS', false)
-
     openspace.resetCameraDirection()
 
     openspace.printInfo("Done setting default values")
 end
 
 -- Define locals
-solarImageryDataRootPath = "/media/noven/BE23-1097/solarbrowsingdata/"
+solarImageryDataRootPath = "X:/CCMC/solarbrowsingdata"
 
 return {
     ScenePath = ".",
@@ -123,28 +133,32 @@ return {
     Modules = {
         "sun",
         "sun-imagery",
-        -- "mercury",
-        -- "venus",
-         "earth",
-        -- "mars",
-        -- "jupiter",
-        -- "saturn",
+        "lodglobes/mercury",
+        "lodglobes/venus",
+        "lodglobes/earth",
+         --"earth",
+        "lodglobes/moon",
+        "geosatellites",
+        "lodglobes/mars",
+        "lodglobes/jupiter",
+        "lodglobes/saturn",
         -- "uranus",
         -- "neptune",
         "stars",
         -- "stars-denver",
-        "batsrussequence",
+        --"batsrussequence",
         "milkyway",
-        "milkyway-eso",
+        -- "milkyway-eso",
         --"constellationbounds",
+        -- "satellites",
         "missions/sdo",
         "missions/stereo-a",
         "missions/stereo-b",
         "missions/soho",
         "fieldlinessequence/customkernels/hnm_ref_frame",
         "fieldlinessequence/customkernels/gsm_ref_frame",
-        "fieldlinessequence/july2012/batsrus_fl_july2012",
-        "fieldlinessequence/july2012/enlil_fl_july2012",
-        "fieldlinessequence/july2012/pfss_fl_july2012",
+        "fieldlinessequence/batsrus_fl_july2012",
+        "fieldlinessequence/enlil_fl_july2012",
+        "fieldlinessequence/pfss_fl_july2012",
     }
 }
