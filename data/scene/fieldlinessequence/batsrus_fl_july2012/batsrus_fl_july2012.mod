@@ -24,7 +24,7 @@ local lutzArtificialBatsrusFlow = lutzArtificial..d4..'velocity_flowlines/';
 
 local batsrusTemperatureColorTable = batsrusColorTables..'batsrus_temperature.txt';
 local batsrusDensityColorTable = batsrusColorTables..'batsrus_density.txt';
-local batsrusCurrentColorTable = batsrusColorTables..'batsrus_current.txt';
+local batsrusCurrentColorTable = batsrusColorTables..'batsrus_current2.txt';
 local batsrusVelocityColorTable = batsrusColorTables..'batsrus_velocity.txt';
 local batsrusTopologyColorTable = batsrusColorTables..'batsrus_topology.txt';
 
@@ -102,7 +102,7 @@ return {
             },
             DefaultColor = {0.7,0.4,0,0.6},
             RadialDomainLimits = {0, 350},
-            CartesianDomainLimits = {{-400, 60},{-80,80},{-32,32},},
+            CartesianDomainLimits = {{-400, 60},{-80,80},{-100,100},},
         },
     },
     --------------------- VELOCITY FLOWLINES ------------------------
@@ -140,50 +140,50 @@ return {
             },
             DefaultColor = {0.7,0.4,0,0.6},
             RadialDomainLimits = {0, 350},
-            CartesianDomainLimits = {{-400, 60},{-80,80},{-32,32},},
+            CartesianDomainLimits = {{-400, 60},{-80,80},{-100,100},},
         },
     },
 
 
 
 -------------------- ARTIFICIAL RUN -------------------------
-    -- {
-    --     Name = "FL_BATSRUS_Artificial_OpenClosed",
-    --     Parent = "GSMReferenceFrame",
-    --     Renderable = {
-    --         Type = "RenderableFieldlinesSequence",
-    --         TracingMethod = "PreTracedBinary",
-    --         SourceFolder = lutzArtificialBatsrusMagnetic..'open-closed/',
-    --         -- StartStateOffset = 1080,
-    --         -- StateStepSize = 100,
-    --         -- MaxNumStates = 12,
-    --         LoadBinariesAtRuntime = true,
-    --         ColorTablePaths = {
-    --             batsrusTemperatureColorTable,
-    --             batsrusDensityColorTable,
-    --             batsrusCurrentColorTable,
-    --             batsrusVelocityColorTable,
-    --             batsrusTopologyColorTable,
-    --         },
-    --         ColorTableMinMax = {
-    --             {0, 100000000},
-    --             {0, 60},
-    --             {-0.015, 0.015},
-    --             {150, 550},
-    --             {0, 3},
-    --         },
-    --         ExtraMinMaxLimits = {
-    --             {0, 1000000000},
-    --             {-1, 150},
-    --             {-0.2, 0.2},
-    --             {0, 6000},
-    --             {0, 3},
-    --         },
-    --         DefaultColor = {0.7,0.4,0,0.6},
-    --         RadialDomainLimits = {0, 350},
-    --         CartesianDomainLimits = {{-400, 60},{-80,80},{-32,32},},
-    --     },
-    -- },
+    {
+        Name = "FL_BATSRUS_Artificial_OpenClosed",
+        Parent = "GSMReferenceFrame",
+        Renderable = {
+            Type = "RenderableFieldlinesSequence",
+            TracingMethod = "PreTracedBinary",
+            SourceFolder = lutzArtificialBatsrusMagnetic..'open-closed/',
+            -- StartStateOffset = 1080,
+            -- StateStepSize = 100,
+            -- MaxNumStates = 12,
+            LoadBinariesAtRuntime = true,
+            ColorTablePaths = {
+                batsrusTemperatureColorTable,
+                batsrusDensityColorTable,
+                batsrusCurrentColorTable,
+                batsrusVelocityColorTable,
+                batsrusTopologyColorTable,
+            },
+            ColorTableMinMax = {
+                {0, 100000000},
+                {0, 60},
+                {-0.015, 0.015},
+                {150, 550},
+                {0, 3},
+            },
+            ExtraMinMaxLimits = {
+                {0, 1000000000},
+                {-1, 150},
+                {-0.2, 0.2},
+                {0, 6000},
+                {0, 3},
+            },
+            DefaultColor = {0.7,0.4,0,0.6},
+            RadialDomainLimits = {0, 350},
+            CartesianDomainLimits = {{-400, 60},{-80,80},{-32,32},},
+        },
+    },
     -- {
     --     Name = "FL_BATSRUS_Artificial_ReconnectionDayside",
     --     Parent = "GSMReferenceFrame",
