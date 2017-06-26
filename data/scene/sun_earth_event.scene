@@ -58,6 +58,8 @@ function postInitialization()
     openspace.setPropertyValue("FL_PFSS.renderable.Color.fieldlineColorMethod", 0)
     openspace.setPropertyValue("FL_PFSS.renderable.enabled", false)
 
+    openspace.setPropertyValue("SolarImagery_ACE_Marker.renderable.enabled", false)
+
     -- GDAL
     --openspace.setPropertyValueSingle('Global Properties.GlobeBrowsing.GdalWrapper.logGdalErrors', false);
 
@@ -112,9 +114,13 @@ function postInitialization()
 
     -- EARTH Label
     openspace.addVirtualProperty("BoolProperty",  "Earth Label",   "SolarImagery_EarthMarker_Marker.renderable.enabled", true, nil, nil)
+
+    -- ACE Label
+    openspace.addVirtualProperty("BoolProperty", "ACE Label", "SolarImagery_ACE_Marker.renderable.enabled", false, nil, nil)
     -- ========================================================== SOLARBROWSING END ==================================================
     -- =================================================================================================================================
     -- =================================================================================================================================
+
     openspace.resetCameraDirection()
 
     openspace.printInfo("Done setting default values")

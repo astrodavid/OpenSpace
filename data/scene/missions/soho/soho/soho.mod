@@ -32,6 +32,25 @@ return {
             Resolution = 1000
         }
     },
+    -- ACE Marker
+    {
+        Name = "SolarImagery_ACE_Marker",
+        Parent = "Soho",
+        Renderable = {
+            Type = "RenderablePlane",
+            Size =  10^9.8,
+            Origin = "Center",
+            Billboard = true,
+            Texture = solarImageryDataRootPath .. "/markers/marker_ace.png",
+            BlendMode = "Additive"
+        },
+        Transform = {
+            Translation = {
+                Type = "StaticTranslation",
+                Position = {0, 0, 0}
+            }
+        }
+    },
     -- Marker
     {
         Name = "SolarImagery_Soho_Marker",
