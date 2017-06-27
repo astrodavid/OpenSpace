@@ -212,6 +212,12 @@ openspace.bindKey("Shift+p",
     "Toggle PFSS"
 )
 
+openspace.bindKey("Ctrl+p",
+    "openspace.time.setDeltaTime(0.001)" ..
+    helper.property.invert('FL_PFSS.renderable.showParticles'),
+    "Toggle particles"
+)
+
 openspace.bindKey("Ctrl+e",
     helper.renderable.toggle('SolarImagery_EarthMarker_Marker'),
     --helper.renderable.toggle('SolarImagery_SDO_Marker'),
@@ -222,9 +228,9 @@ openspace.bindKey("Shift+e",
     helper.renderable.toggle('FL_ENLIL_slice_eqPlane_011AU_1') ..
     helper.renderable.toggle('FL_ENLIL_slice_eqPlane_011AU_2') ..
     helper.renderable.toggle('FL_ENLIL_slice_lat4_011AU_1') ..
-    helper.renderable.toggle('FL_ENLIL_slice_lat4_011AU_2') ..
-    helper.renderable.toggle('FL_ENLIL_earth') ..
-    helper.renderable.toggle('FL_ENLIL_stereoa'),
+    helper.renderable.toggle('FL_ENLIL_slice_lat4_011AU_2'),
+    --helper.renderable.toggle('FL_ENLIL_earth') ..
+    --helper.renderable.toggle('FL_ENLIL_stereoa'),
     "Toggle Enlil"
 )
 
@@ -309,4 +315,13 @@ openspace.bindKey("Shift+a",
     helper.property.invert('FL_ENLIL_earth.renderable.additiveBlending') ..
     helper.property.invert('FL_ENLIL_stereoa.renderable.additiveBlending'),
     "Toggle Additive Blending"
+)
+
+-- Turn off trails
+openspace.bindKey("Shift+j",
+    helper.property.invert("JupiterTrail.renderable.enabled") ..
+    helper.property.invert("VenusTrail.renderable.enabled") ..
+    helper.property.invert("SaturnTrail.renderable.enabled") ..
+    helper.property.invert("MarsTrail.renderable.enabled"),
+    "Turn off planet trails"
 )

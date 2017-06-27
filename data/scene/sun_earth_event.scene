@@ -54,9 +54,7 @@ function postInitialization()
     openspace.setPropertyValue("FL_ENLIL*.renderable.Color.transferFunctionLimit2", '1050')
     openspace.setPropertyValue("FL*.renderable.enabled", false)
 
-    -- PFSS
-    openspace.setPropertyValue("FL_PFSS.renderable.Color.fieldlineColorMethod", 0)
-    openspace.setPropertyValue("FL_PFSS.renderable.enabled", false)
+    openspace.setPropertyValue("SolarImagery_ACE_Marker.renderable.enabled", false)
 
     -- GDAL
     --openspace.setPropertyValueSingle('Global Properties.GlobeBrowsing.GdalWrapper.logGdalErrors', false);
@@ -112,6 +110,9 @@ function postInitialization()
 
     -- EARTH Label
     openspace.addVirtualProperty("BoolProperty",  "Earth Label",   "SolarImagery_EarthMarker_Marker.renderable.enabled", true, nil, nil)
+
+    -- ACE Label
+    openspace.addVirtualProperty("BoolProperty", "ACE Label", "SolarImagery_ACE_Marker.renderable.enabled", false, nil, nil)
     -- ========================================================== SOLARBROWSING END ==================================================
     -- =================================================================================================================================
     -- =================================================================================================================================
@@ -185,14 +186,13 @@ function postInitialization()
     openspace.setPropertyValue("FL_BATSRUS_Artificial_DTimeStep*.renderable.Particles.fieldlineParticleSpeed", 15000000)
 
 
-
-
-
     ---------------------PFSS------------------------- particles
     openspace.setPropertyValue("FL_PFSS.renderable.Particles.fieldlineParticleFrequency", 100)
     openspace.setPropertyValue("FL_PFSS.renderable.Particles.fieldlineParticleSpeed", 30000000)
     openspace.setPropertyValue("FL_PFSS.renderable.Particles.fieldlineParticleSize", 9)
     openspace.setPropertyValue("FL_PFSS.renderable.Particles.fieldlineParticleColor", {1, 0.9, 1, 0.74})
+    openspace.setPropertyValue("FL_PFSS.renderable.Color.fieldlineColorMethod", 0)
+    openspace.setPropertyValue("FL_PFSS.renderable.enabled", false)
     -----------------------------------------------------------
 
 
@@ -221,13 +221,6 @@ function postInitialization()
     -- openspace.setPropertyValue("FL_BATSRUS_J12_OpenClosed*.renderable.Color.fieldlineColorQuantity", 4) -- Topology
     openspace.setPropertyValue("FL_BATSRUS_J12_FlowLines*.renderable.Color.fieldlineColorQuantity", 3) -- Velocity
     openspace.setPropertyValue("FL_BATSRUS_J12_FlowLines*.renderable.Color.fieldlineColor", {1,1,1,0.4})
-
-
-
-
-
-
-
 
     openspace.resetCameraDirection()
 
