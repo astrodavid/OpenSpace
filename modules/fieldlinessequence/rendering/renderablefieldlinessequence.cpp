@@ -83,6 +83,8 @@ namespace {
     const char* keyExtraColorTablePaths         = "ColorTablePaths";
     const char* keyExtraColorTableMinMaxs       = "ColorTableMinMax";
 
+    const char* keyDefaultColor                 = "DefaultColor";
+
     const char* keyCartesianDomainLimits        = "CartesianDomainLimits";
     const char* keyRadialDomainLimits           = "RadialDomainLimits";
 
@@ -120,10 +122,12 @@ namespace openspace {
 
 RenderableFieldlinesSequence::RenderableFieldlinesSequence(const ghoul::Dictionary& dictionary)
     : Renderable(dictionary),
+      _flipParticleDirection("flipParticleDir", "Reverse Direction", false),
       _isClampingColorValues("isClamping", "Clamp", true),
       _isMorphing("isMorphing", "Morphing", false),
       _show3DLines("show3DLines", "3D Lines", false),
       _showSeedPoints("showSeedPoints", "Show Seed Points", false),
+      _showParticles("showParticles", "Show Particles", false),
       _useABlending("additiveBlending", "Additive Blending", false),
       _useNearestSampling("useNearestSampling", "Nearest Sampling", false),
       _usePointDrawing("togglePointDrawing", "Draw Points", false),
@@ -137,9 +141,9 @@ RenderableFieldlinesSequence::RenderableFieldlinesSequence(const ghoul::Dictiona
       _colorizingQuantity("fieldlineColorQuantity", "Quantity", properties::OptionProperty::DisplayType::Dropdown),
       _domainQuantity("fieldlineDomainQuantity", "Quantity", properties::OptionProperty::DisplayType::Dropdown),
       _colorGroup("Color"),
-      _domainGroup("Domain Limits"),
+      _domainGroup("DomainLimits"),
       _particleGroup("Particles"),
-      _seedGroup("Seed Points"),
+      _seedGroup("SeedPoints"),
       _transferFunctionPath("transferFunctionPath", "Transfer Function Path"),
       _transferFunctionMinVal("transferFunctionLimit1", "TF minimum", "0"),
       _transferFunctionMaxVal("transferFunctionLimit2", "TF maximum", "1"),
@@ -981,7 +985,9 @@ bool RenderableFieldlinesSequence::initialize() {
     _domainGroup.addProperty(_domainLimY);
     _domainGroup.addProperty(_domainLimZ);
 
+    addProperty(_showParticles);
     addPropertySubOwner(_particleGroup);
+    _particleGroup.addProperty(_flipParticleDirection);
     _particleGroup.addProperty(_fieldlineParticleColor);
     _particleGroup.addProperty(_fieldlineParticleSize);
     _particleGroup.addProperty(_modulusDivider);
@@ -1123,8 +1129,9 @@ bool RenderableFieldlinesSequence::initialize() {
 
         _transferFunctionPath.onChange([this] {
             // TOGGLE ACTIVE SHADER PROGRAM
-            _transferFunction->setPath(_transferFunctionPath);
-            *_activeColorTable = _transferFunctionPath;
+            std::string tmpString = fsManager.getAbsPath(_transferFunctionPath);
+            _transferFunction->setPath(tmpString);
+            *_activeColorTable = tmpString;
         });
 
         _transferFunctionMinVal.onChange([this] {
@@ -1217,6 +1224,16 @@ bool RenderableFieldlinesSequence::initialize() {
 
     setRenderBin(Renderable::RenderBin::Overlay);
 
+    ////////////////////////////////////////
+    // LAST MINUTE ADDITIONS!!!!!!!!!!!!!!!
+    glm::vec4 tmpColor;
+    if (_dictionary.getValue(keyDefaultColor, tmpColor)) {
+        LDEBUG("Default color set through LUA modfile!");
+        _fieldlineColor = tmpColor;
+    }
+
+    //////////////////////////////////////////////
+
     return true;
 }
 
@@ -1283,6 +1300,8 @@ void RenderableFieldlinesSequence::render(const RenderData& data) {
         _activeProgramPtr->setUniform("colorMethod", _colorMethod);
         _activeProgramPtr->setUniform("fieldlineColor", _fieldlineColor);
         _activeProgramPtr->setUniform("fieldlineParticleColor", _fieldlineParticleColor);
+        _activeProgramPtr->setUniform("usingParticles", _showParticles);
+        _activeProgramPtr->setUniform("reversedParticleDir", _flipParticleDirection);
         _activeProgramPtr->setUniform("domainLimR", _domainLimR.value() * _scalingFactor);
         _activeProgramPtr->setUniform("domainLimX", _domainLimX.value() * _scalingFactor);
         _activeProgramPtr->setUniform("domainLimY", _domainLimY.value() * _scalingFactor);
@@ -1309,10 +1328,10 @@ void RenderableFieldlinesSequence::render(const RenderData& data) {
         if (_hasExtraVariables) {
             if (_colorMethod == colorMethod::QUANTITY_DEPENDENT) {
                 // TODO MOVE THIS TO UPDATE AND CHECK
-                _textureUnit = std::make_unique<ghoul::opengl::TextureUnit>();
-                _textureUnit->activate();
+                ghoul::opengl::TextureUnit textureUnit;
+                textureUnit.activate();
                 _transferFunction->bind(); // Calls update internally
-                _activeProgramPtr->setUniform("colorMap", _textureUnit->unitNumber());
+                _activeProgramPtr->setUniform("colorMap", textureUnit);
                 _activeProgramPtr->setUniform("isClamping", _isClampingColorValues);
                 _activeProgramPtr->setUniform("transferFunctionLimits",
                                               _transferFunctionLimits[_colorizingQuantity]);
@@ -1641,28 +1660,29 @@ bool RenderableFieldlinesSequence::getSeedPointsFromDictionary() {
 }
 
 void RenderableFieldlinesSequence::readNewState(const int activeStateIndex) {
-    if (_states.size() > 1) {
-        LERROR("ALREADY MORE THAN ONE STATE IN '_states' VECTOR");
-    }
+    // if (_states.size() > 1) {
+    //     LERROR("ALREADY MORE THAN ONE STATE IN '_states' VECTOR");
+    // }
     FieldlinesState tmpState;
     // _states.push_back(tmpState);
     // size_t numS = _states.size();
-    auto start = std::chrono::high_resolution_clock::now();
+    // auto start = std::chrono::high_resolution_clock::now();
 
     bool statuss = fsManager.getFieldlinesStateFromBinary(
             _validSourceFilePaths[activeStateIndex],
             tmpState);
 
     _newState = std::move(tmpState);
+
+    // auto end = std::chrono::high_resolution_clock::now();
+    // std::chrono::duration<double, std::milli> diff = end - start;
+    // auto ms = diff.count();
+    // if (ms > 40) {
+    //     LWARNING("TIME FOR ADDING STATE FROM BINARY: " << ms << " milliseconds. (" << _validSourceFilePaths[activeStateIndex] << ")");
+    // }
+
     _newStateIsReady = true;
     _isProcessingState = false;
-
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> diff = end - start;
-    auto ms = diff.count();
-    if (ms > 40) {
-        LWARNING("TIME FOR ADDING STATE FROM BINARY: " << ms << " milliseconds. (" << _validSourceFilePaths[activeStateIndex] << ")");
-    }
 }
 
 } // namespace openspace

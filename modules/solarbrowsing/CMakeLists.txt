@@ -29,7 +29,7 @@ include(${OPENSPACE_CMAKE_EXT_DIR}/module_definition.cmake)
 #add_subdirectory(${OPENJPEG_ROOT_DIR})
 #add_subdirectory(${H264_ROOT_DIR})
 
-set(KAKADU_ROOT "/media/noven/BE23-1097/solarbrowsingdata/kakadu")
+set(KAKADU_ROOT "X:/CCMC/solarbrowsingdata/kakadu")
 
 set(HEADER_FILES
     # Openjpeg stuff
@@ -108,7 +108,7 @@ if (UNIX)
     target_link_libraries(${MODULE_NAME} ${KAKADU_ROOT}/linux/libkdu_v79R.so ${KAKADU_ROOT}/linux/libkdu_a79R.so)
 endif (UNIX)
 if (WIN32)
-    target_link_libraries(${MODULE_NAME} ${KAKADU_ROOT}/windows/libkdu_v79R.dll ${KAKADU_ROOT}/windows/libkdu_a79R.dll)
+    target_link_libraries(${MODULE_NAME} ${KAKADU_ROOT}/windows/kdu_v79R.lib ${KAKADU_ROOT}/windows/kdu_a79R.lib)
 endif(WIN32)
 
 #target_link_libraries(${MODULE_NAME} ${GROK_LIBRARY_NAME} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})

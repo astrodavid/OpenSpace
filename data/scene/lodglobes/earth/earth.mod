@@ -24,9 +24,9 @@ return {
                 DestinationFrame = "GALACTIC",
             }
         },
-    },    
+    },
     -- EarthTrail module
-    {   
+    {
         Name = "EarthTrail",
         Parent = "SolarSystemBarycenter",
         Renderable = {
@@ -44,6 +44,24 @@ return {
             Resolution = 1000
         },
         GuiName = "/Solar/EarthTrail"
+    },
+    {
+        Name = "SolarImagery_EarthMarker_Marker",
+        Parent = "Earth",
+        Renderable = {
+            Type = "RenderablePlane",
+            Size = 10^9.8,
+            Origin = "Center",
+            Billboard = true,
+            Texture = solarImageryDataRootPath .. "/markers/marker_earth.png",
+            BlendMode = "Additive"
+        },
+        Transform = {
+            Translation = {
+                Type = "StaticTranslation",
+                Position = {0, 0, 0},
+            }
+        }
     },
     -- RenderableGlobe module
     {
@@ -73,11 +91,11 @@ return {
                         Type = "ByLevel",
                         LevelTileProviders = {
                             {
-                                MaxLevel = 3, 
+                                MaxLevel = 3,
                                 TileProvider = {
                                     Type = "Temporal",
                                     Name = "Temporal VIIRS SNPP",
-                                    FilePath = "map_service_configs/GIBS/Temporal_VIIRS_SNPP_CorrectedReflectance_TrueColor.xml", }, 
+                                    FilePath = "map_service_configs/GIBS/Temporal_VIIRS_SNPP_CorrectedReflectance_TrueColor.xml", },
                             },
                             {
                                 MaxLevel = 22,
@@ -88,6 +106,14 @@ return {
                             },
                         },
                         Enabled = true,
+                    },
+                    {
+                        Name = "Terra",
+                        FilePath = "map_service_configs/GIBS/MODIS_Terra_CorrectedReflectance_TrueColor.xml"
+                    },
+                    {
+                        Name = "ESRI",
+                        FilePath = "map_service_configs/ESRI/ESRI_Imagery_World_2D.wms"
                     },
                     {
                         Type = "Temporal",
@@ -102,6 +128,13 @@ return {
                     {
                         Name = "BMNG",
                         FilePath = "map_service_configs/Utah/Bmng.wms"
+                    },
+                    {
+                        Name = "Ovation Prime",
+                        Type = "Temporal",
+                        FilePath = "map_service_configs/other/ovation_12_00.xml",
+                        TilePixelSize = 64,
+                        Enabled = true
                     }
                 },
                 GrayScaleLayers = { },
@@ -121,6 +154,13 @@ return {
                         Type = "Temporal",
                         Name = "Temporal Earth at Night",
                         FilePath = "map_service_configs/GIBS/Temporal_VIIRS_SNPP_DayNightBand_ENCC.xml"
+                    },
+                    {
+                        Name = "Ovation Prime",
+                        Type = "Temporal",
+                        FilePath = "map_service_configs/other/ovation_1m.xml",
+                        TilePixelSize = 64,
+                        Enabled = true
                     }
                 },
                 WaterMasks = {
@@ -157,6 +197,14 @@ return {
                         Radii = earthEllipsoid,
                         BackgroundImagePath = "../arrows.png",
                     },
+                    {
+                        Name = "Ovation Prime",
+                        Type = "Temporal",
+                        FilePath = "map_service_configs/other/ovation_12_00.xml",
+                        TilePixelSize = 64,
+                        Enabled = true
+                    }
+
                 },
                 HeightLayers = {
                     {

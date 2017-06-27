@@ -20,6 +20,7 @@ helper.setDeltaTimeKeys({
 
 -- Spacecraft imagery stuff
 openspace.bindKey("a", "openspace.setPropertyValue('Interaction.origin', 'Sun')", "Sets the focus of the camera to the Sun")
+openspace.bindKey("e", "openspace.setPropertyValue('Interaction.origin', 'Earth')", "Sets the focus of the camera to the Earth")
 openspace.bindKey("s", "openspace.setPropertyValue('Interaction.origin', 'SDO')", "Sets the focus of the camera to SDO")
 --openspace.bindKey("d", "openspace.setPropertyValue('Interaction.origin', 'Stereo A')", "Sets the focus of the camera to Stereo A")
 --openspace.bindKey("f", "openspace.setPropertyValue('Interaction.origin', 'SOHO')", "Sets the focus of the camera to SOHO")
@@ -30,13 +31,50 @@ openspace.bindKey("j", "openspace.time.setTime('2012 JUL 01 00:00:00.000')", "Se
 openspace.bindKey("k", "openspace.time.setTime('2012 JUL 04 00:00:00.000')", "Sets time to 2012 07 04 00:00:00.000")
 openspace.bindKey("l", "openspace.time.setTime('2012 JUL 12 19:10:15.000')", "Sets time to 2012 07 12 19:10:15.000")
 
-openspace.bindKey("Ctrl+d",
-    "openspace.setPropertyValue('SolarImagery_Stereo_StereoA_Image_EUV.renderable.currentActiveInstrumentProperty', 'SECCHI_EUVI_195');" ..
-    "openspace.setPropertyValue('SolarImagery_Stereo_StereoB_Image_EUV.renderable.currentActiveInstrumentProperty', 'SECCHI_EUVI_195');" ..
-    "openspace.setPropertyValue('SolarImagery_SDO_Image_AIA.renderable.currentActiveInstrumentProperty', 'AIA_AIA_193');",
-    "Sets all EUV to 195"
-    --"openspace.setPropertyValue('Pluto.renderable.clearAllProjections', true);",
-)
+
+-- openspace.bindKey("x",
+--     "openspace.setPropertyValue("FL_BATSRUS_Artificial_SingleStep*.renderable.showParticles", true)"
+--     helper.property.invert('FL_BATSRUS_Artificial_SingleStepOpenClosed.renderable.'),
+--     ""
+-- )
+
+
+
+
+-- TODO : MOON AND GEOSYNCHRONIZE TOGGLES!
+-- TODO : ADD TIME STEP JAN-2000-01 04.00 and JAN-2000-01 06.57
+-- TODO Everything colored by topology
+-- TODO : SET PARTICLES AND COLORS CORRECTLY
+-- OPENCLOSED COLOR ALPHA 0.18, PARTICLE ALPHA 0.5
+-- OPENCLOSED PARTICLE FREQUENCY 31
+-- OPENCLOSED PARTICLE SIZE 2
+-- OPENCLOSED PARTICLE SPEED 15000000
+-- THROUGHOUT PARTICLE FREQUENCY 31
+-- THROUGHOUT PARTICLE SIZE 2
+-- THROUGHOUTS COLOR ALPHA 0.33, PARTICLE ALPHA 1.0
+-- PARTICLE SPEED = 15000000
+-- DELTA TIME 0.001
+
+
+
+
+
+openspace.bindKey("z", "openspace.time.setDeltaTime(0.001)", "Sets delta time to 0.001")
+openspace.bindKey("x", "openspace.time.setTime('2011 JAN 01 00:00:00.000')", "Sets time to 2011 01 12 00:00:00.000")
+openspace.bindKey("c", "openspace.time.setTime('2000 JAN 01 04:00:00.000')", "Sets time to 2000 01 01 04:00:00.000")
+openspace.bindKey("v", "openspace.time.setTime('2000 JAN 01 06:57:00.000')", "Sets time to 2000 01 01 06:57:00.000")
+openspace.bindKey("b", "openspace.time.setTime('2000 JAN 01 05:30:00.000')", "Sets time to 2000 01 01 05:30:00.000")
+openspace.bindKey("n", "openspace.time.setTime('2012 JUL 14 06:00:00.000')", "Sets time to 2012 07 14 06:00:00.000")
+openspace.bindKey("m", "openspace.time.setTime('2012 JUL 15 10:00:00.000')", "Sets time to 2012 07 15 10:00:00.000")
+
+
+-- openspace.bindKey("Ctrl+d",
+--     "openspace.setPropertyValue('SolarImagery_Stereo_StereoA_Image_EUV.renderable.currentActiveInstrumentProperty', 'SECCHI_EUVI_195');" ..
+--     "openspace.setPropertyValue('SolarImagery_Stereo_StereoB_Image_EUV.renderable.currentActiveInstrumentProperty', 'SECCHI_EUVI_195');" ..
+--     "openspace.setPropertyValue('SolarImagery_SDO_Image_AIA.renderable.currentActiveInstrumentProperty', 'AIA_AIA_193');",
+--     "Sets all EUV to 195"
+--     --"openspace.setPropertyValue('Pluto.renderable.clearAllProjections', true);",
+-- )
 
 openspace.bindKey("Alt+d",
     "openspace.setPropertyValue('SolarImagery_Stereo_StereoA_Image_EUV.renderable.currentActiveInstrumentProperty', 'SECCHI_EUVI_304');" ..
@@ -57,7 +95,6 @@ openspace.bindKey("Shift+d",
     helper.renderable.toggle('SolarImagery_Stereo_L_StereoB_Marker') ..
     "openspace.setPropertyValue('SolarImagery_Stereo_StereoA_Image_EUV.renderable.currentActiveInstrumentProperty', 'SECCHI_EUVI_195');" ..
     "openspace.setPropertyValue('SolarImagery_Stereo_StereoB_Image_EUV.renderable.currentActiveInstrumentProperty', 'SECCHI_EUVI_195');" ..
-    "openspace.setPropertyValue('SolarImagery_*_Image*.renderable.moveFactor', 0.9)" ..
     helper.renderable.toggle('SolarImagery_Stereo_StereoA_Image_EUV') ..
     helper.renderable.toggle('SolarImagery_Stereo_StereoB_Image_EUV') ..
     helper.property.invert('SolarImagery_Stereo_StereoA_Image_EUV.renderable.enableFrustum') ..
@@ -81,7 +118,7 @@ openspace.bindKey("Ctrl+d",
 )
 
 -- Frustums
-openspace.bindKey("f",
+openspace.bindKey("Ctrl+h",
     helper.property.invert('SolarImagery_SDO_Image_AIA.renderable.enableFrustum') ..
     helper.property.invert('SolarImagery_Stereo_StereoA_Image_EUV.renderable.enableFrustum') ..
     helper.property.invert('SolarImagery_Stereo_StereoA_Image_COR.renderable.enableFrustum') ..
@@ -102,30 +139,57 @@ openspace.bindKey("Shift+s",
 
 -- Toggle SDO Marker, turn on SDO Frustum, move out planes, turn on plane opacity,  set to continuum
 openspace.bindKey("Ctrl+s",
-    helper.renderable.toggle('SolarImagery_SDO_Marker') ..
-    helper.renderable.toggle('SolarImagery_EarthMarker_Marker') ..
+    --helper.renderable.toggle('SolarImagery_SDO_Marker') ..
+    --helper.renderable.toggle('SolarImagery_EarthMarker_Marker') ..
     helper.property.invert('SolarImagery_SDO_Image_AIA.renderable.enableFrustum') ..
     --"openspace.setPropertyValue('SolarImagery_*_Image*.renderable.moveFactor', 0.85)" ..
     helper.renderable.toggle('SolarImagery_Stereo_StereoA_Image_EUV') ..
+     "openspace.setPropertyValue('SolarImagery_*_Image*.renderable.moveFactor', 0.9)" ..
     helper.renderable.toggle('SolarImagery_Stereo_StereoB_Image_EUV') ..
     "openspace.setPropertyValue('SolarImagery_*_Image*.renderable.planeOpacity', 100)" ..
     "openspace.setPropertyValue('SolarImagery_SDO_Image_AIA.renderable.currentActiveInstrumentProperty', 'HMI_HMI_continuum');",
-    "Toggle SDO Marker"
+    "Enable SDO frustum and switch to Continuum"
 )
 
 -- Toggle SOHO
-openspace.bindKey("Shift+f",
+openspace.bindKey("Shift+h",
     helper.renderable.toggle('SolarImagery_Soho_Image_C2') ..
     helper.renderable.toggle('SolarImagery_Soho_Image_C3') ..
     helper.property.invert('SolarImagery_Soho_Image_C2.renderable.enableFrustum') ..
     helper.property.invert('SolarImagery_Soho_Image_C3.renderable.enableFrustum') ..
-    helper.property.invert('SolarImagery_SDO_Image_AIA.renderable.enableFrustum') ..
+    --helper.property.invert('SolarImagery_SDO_Image_AIA.renderable.enableFrustum') ..
     helper.renderable.toggle('SolarImagery_SDO_Marker') ..
     helper.renderable.toggle('SolarImagery_Soho_Marker') ..
     helper.renderable.toggle('SolarImagery_Soho_Trail'),
     "Toggle SOHO"
 )
 
+-- Set
+openspace.bindKey("Ctrl+l",
+    -- "openspace.setPropertyValue('SolarImagery_SDO_Image_AIA.renderable.minRealTimeUpdateInterval', 1000);" ..
+    -- "openspace.setPropertyValue('SolarImagery_Stereo_StereoA_Image_EUV.renderable.minRealTimeUpdateInterval', 1000);" ..
+    -- "openspace.setPropertyValue('SolarImagery_Stereo_StereoB_Image_EUV.renderable.minRealTimeUpdateInterval', 1000);",
+    helper.renderable.toggle('SolarImagery_SDO_Image_AIA') ..
+    helper.renderable.toggle('SolarImagery_Stereo_StereoA_Image_EUV') ..
+    helper.renderable.toggle('SolarImagery_Stereo_StereoB_Image_EUV'),
+    "Set EUV to slow update"
+)
+
+-- toggle
+openspace.bindKey("Ctrl+k",
+    helper.renderable.toggle('SolarImagery_Soho_Image_C2') ..
+    helper.renderable.toggle('SolarImagery_Soho_Image_C3') ..
+    helper.renderable.toggle('SolarImagery_Stereo_StereoA_Image_COR') ..
+    helper.renderable.toggle('SolarImagery_Stereo_StereoB_Image_COR'),
+    "Toggle Corona Graphs"
+)
+
+openspace.bindKey("Shift+c",
+    "openspace.registerScreenSpaceRenderable({Type = 'ScreenSpaceImage', TexturePath = openspace.absPath('X:/CCMC/fieldlinesdata/colortables/kroyw_colorbar_enlil_speed.png') });",
+    "Toggle screen space color table"
+)
+
+-- TODO(mnoven): SDO is not changing to hmi magnetogram properly, bit alt+d works if before
 openspace.bindKey("Ctrl+g",
     helper.renderable.toggle('SolarImagery_Stereo_O_StereoA_Trail') ..
     helper.renderable.toggle('SolarImagery_Stereo_O_StereoB_Trail') ..
@@ -139,6 +203,8 @@ openspace.bindKey("Ctrl+g",
     "Turn off stereo a, b, soho trails, turn off soho marker and switch to hmi continuum and turn on PFSS, set to PFSS Time"
 )
 
+--"openspace.setPropertyValue('SolarImagery_SDO_Image_AIA.renderable.currentActiveInstrumentProperty', 'AIA_AIA_193');",
+
 -- Make hot KEY
 openspace.bindKey("Shift+p",
     --"openspace.time.setTime('2012 JUL 12 19:10:15.000')" ..
@@ -147,9 +213,19 @@ openspace.bindKey("Shift+p",
 )
 
 openspace.bindKey("Ctrl+e",
-    helper.renderable.toggle('SolarImagery_EarthMarker_Marker') ..
-    helper.renderable.toggle('SolarImagery_SDO_Marker'),
-    "Toggle Earth and SDO Marker"
+    helper.renderable.toggle('SolarImagery_EarthMarker_Marker'),
+    --helper.renderable.toggle('SolarImagery_SDO_Marker'),
+    "Toggle Earth Marker"
+)
+
+openspace.bindKey("Shift+e",
+    helper.renderable.toggle('FL_ENLIL_slice_eqPlane_011AU_1') ..
+    helper.renderable.toggle('FL_ENLIL_slice_eqPlane_011AU_2') ..
+    helper.renderable.toggle('FL_ENLIL_slice_lat4_011AU_1') ..
+    helper.renderable.toggle('FL_ENLIL_slice_lat4_011AU_2') ..
+    helper.renderable.toggle('FL_ENLIL_earth') ..
+    helper.renderable.toggle('FL_ENLIL_stereoa'),
+    "Toggle Enlil"
 )
 
 openspace.bindKey("Ctrl+1",
@@ -217,4 +293,20 @@ openspace.bindKey("Ctrl+9",
 openspace.bindKey("Shift+g",
     "openspace.setPropertyValue('Sun_Projection.renderable.activateLooping', false);",
     "Stop Looping"
+)
+
+-- Toggle Additive Blending for ALL field lines
+openspace.bindKey("Shift+a",
+    helper.property.invert('FL_PFSS.renderable.additiveBlending') ..
+    helper.property.invert('FL_BATSRUS_J12_OpenClosed.renderable.additiveBlending') ..
+    helper.property.invert('FL_BATSRUS_J12_FlowLines.renderable.additiveBlending') ..
+    helper.property.invert('FL_BATSRUS_Artificial_SingleStepFlowLines.renderable.additiveBlending') ..
+    helper.property.invert('FL_BATSRUS_Artificial_SingleStepOpenClosed.renderable.additiveBlending') ..
+    helper.property.invert('FL_ENLIL_slice_eqPlane_011AU_1.renderable.additiveBlending') ..
+    helper.property.invert('FL_ENLIL_slice_eqPlane_011AU_2.renderable.additiveBlending') ..
+    helper.property.invert('FL_ENLIL_slice_lat4_011AU_1.renderable.additiveBlending') ..
+    helper.property.invert('FL_ENLIL_slice_lat4_011AU_2.renderable.additiveBlending') ..
+    helper.property.invert('FL_ENLIL_earth.renderable.additiveBlending') ..
+    helper.property.invert('FL_ENLIL_stereoa.renderable.additiveBlending'),
+    "Toggle Additive Blending"
 )
