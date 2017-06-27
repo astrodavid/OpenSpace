@@ -210,6 +210,12 @@ openspace.bindKey("Shift+p",
     "Toggle PFSS"
 )
 
+openspace.bindKey("Ctrl+p",
+    "openspace.time.setDeltaTime(0.001)" ..
+    helper.property.invert('FL_PFSS.renderable.showParticles'),
+    "Toggle particles"
+)
+
 openspace.bindKey("Ctrl+e",
     helper.renderable.toggle('SolarImagery_EarthMarker_Marker'),
     --helper.renderable.toggle('SolarImagery_SDO_Marker'),
