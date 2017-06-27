@@ -126,7 +126,19 @@ function postInitialization()
     openspace.addVirtualProperty("BoolProperty",  "ENLIL EARTH",   "FL_ENLIL_earth*.renderable.enabled", false, nil, nil)
     openspace.addVirtualProperty("BoolProperty",  "ENLIL STEREOA",   "FL_ENLIL_stereoa*.renderable.enabled", false, nil, nil)
     --- SET COLOR METHOD ON ENLIL SLICES AND STEREOA/EARTH LINES
+    openspace.addVirtualProperty("IntProperty",  "ENLIL SlicesColorMethod",   "FL_ENLIL_slice*.renderable.Color.fieldlineColorMethod", 1,0,1)
+    openspace.addVirtualProperty("IntProperty",  "ENLIL EarthColorMethod",   "FL_ENLIL_earth*.renderable.Color.fieldlineColorMethod", 1,0,1)
 
+
+    openspace.setPropertyValue("FL_ENLIL_earth*.renderable.Particles.fieldlineParticleColor", {1,1,1,1.0})
+    openspace.setPropertyValue("FL_ENLIL_earth*.renderable.Particles.fieldlineParticleSize", 5)
+    openspace.setPropertyValue("FL_ENLIL_earth*.renderable.Particles.fieldlineParticleFrequency", 25)
+    openspace.setPropertyValue("FL_ENLIL_earth*.renderable.Particles.fieldlineParticleSpeed", 25000000)
+    openspace.setPropertyValue("FL_ENLIL_earth*.renderable.Particles.flipParticleDir", true)
+
+    ----------------------------- ARTIFICIAL BATSRUS, TEMPERATURE MOVIE----------------------------------------
+
+    openspace.addVirtualProperty("BoolProperty", "Artificial Temperature Run", "FL_BATSRUS_Artificial_OpenClosed*.renderable.enabled", false, nil, nil)
 
     ----------------------------- ARTIFICIAL BATSRUS, SINGLE TIMESTEP----------------------------------------
     openspace.addVirtualProperty("BoolProperty",  "Single Bats",   "FL_BATSRUS_Artificial_Single*.renderable.enabled", false, nil, nil)
@@ -204,9 +216,11 @@ function postInitialization()
     openspace.addVirtualProperty("BoolProperty",  "Batsrus FlowlinesL",   "FL_BATSRUS_J12_Flo*.renderable.enabled", false, nil, nil)
     openspace.addVirtualProperty("BoolProperty",  "Batsrus OpenClosed",   "FL_BATSRUS_J12_Ope*.renderable.enabled", false, nil, nil)
     openspace.setPropertyValue("FL_BATSRUS_J12_OpenClosed*.renderable.Color.fieldlineColorQuantity", 4) -- Topology
-    openspace.setPropertyValue("FL_BATSRUS_J12_OpenCl*.renderable.DomainLimits.unitInterestRange", {2.5, 3.0})
+    openspace.setPropertyValue("FL_BATSRUS_J12_OpenClosed*.renderable.DomainLimits.fieldlineDomainQuantity", 4) -- Topology
+    openspace.setPropertyValue("FL_BATSRUS_J12_OpenClosed*.renderable.DomainLimits.unitInterestRange", {2.5, 3.0})
     -- openspace.setPropertyValue("FL_BATSRUS_J12_OpenClosed*.renderable.Color.fieldlineColorQuantity", 4) -- Topology
     openspace.setPropertyValue("FL_BATSRUS_J12_FlowLines*.renderable.Color.fieldlineColorQuantity", 3) -- Velocity
+    openspace.setPropertyValue("FL_BATSRUS_J12_FlowLines*.renderable.Color.fieldlineColor", {1,1,1,0.4})
 
     openspace.resetCameraDirection()
 

@@ -63,7 +63,9 @@ openspace.bindKey("z", "openspace.time.setDeltaTime(0.001)", "Sets delta time to
 openspace.bindKey("x", "openspace.time.setTime('2011 JAN 01 00:00:00.000')", "Sets time to 2011 01 12 00:00:00.000")
 openspace.bindKey("c", "openspace.time.setTime('2000 JAN 01 04:00:00.000')", "Sets time to 2000 01 01 04:00:00.000")
 openspace.bindKey("v", "openspace.time.setTime('2000 JAN 01 06:57:00.000')", "Sets time to 2000 01 01 06:57:00.000")
-openspace.bindKey("b", "openspace.time.setTime('2012 JUL 14 06:00:00.000')", "Sets time to 2012 07 14 06:00:00.000")
+openspace.bindKey("b", "openspace.time.setTime('2000 JAN 01 05:30:00.000')", "Sets time to 2000 01 01 05:30:00.000")
+openspace.bindKey("n", "openspace.time.setTime('2012 JUL 14 06:00:00.000')", "Sets time to 2012 07 14 06:00:00.000")
+openspace.bindKey("m", "openspace.time.setTime('2012 JUL 15 10:00:00.000')", "Sets time to 2012 07 15 10:00:00.000")
 
 
 -- openspace.bindKey("Ctrl+d",
