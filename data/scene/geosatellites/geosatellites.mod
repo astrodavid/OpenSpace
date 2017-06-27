@@ -116,7 +116,7 @@ satelliteGroups = {
     -- },
     { title = "Geostationary",
       url = "http://celestrak.com/NORAD/elements/geo.txt",
-      trailColor = {0.9, 0.9, 0.0}
+      trailColor = {0.6, 0.0, 1.0}
     },
 }
 

@@ -32,6 +32,15 @@ function postInitialization()
     openspace.setPropertyValue("MilkyWay.renderable.transparency", 0.25)
     openspace.setPropertyValue("MilkyWay.renderable.segments", 50)
 
+    -- GEOSYNC STUFF
+    openspace.setPropertyValue("geo*.renderable.enabled", false)
+    openspace.setPropertyValue("geo_GOES*.renderable.enabled", true)
+    openspace.setPropertyValue("geo_GOES_*_trail.renderable.lineFade", 0.6)
+
+    --openspace.setPropertyValue("geo_GOES_13_trail.renderable.lineColor" {0.6, 0.0, 1.0})
+
+
+    --openspace.setPropertyValue("geo_GOES_*_trail.renderable.lineColor", {0.6, 0.0, 1.0})
 
     -- ========================================================== SOLARBROWSING BEGIN ==================================================
     -- =================================================================================================================================
@@ -241,7 +250,7 @@ return {
     Modules = {
         "sun",
         "sun-imagery",
-        "lodglobes/mercury",
+        "mercury",
         "lodglobes/venus",
         "lodglobes/earth",
          --"earth",
